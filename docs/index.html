@@ -28,9 +28,11 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; }
 #modal > div > p { font-size: 0.6rem; margin: 0.5rem; }
 #modal[ data-type="info" ] > div.info, #modal[ data-type="config" ] > div.config { display: block; }
 .link { display: inline-block; padding: 0 0.2rem; text-decoration: none; }
-.config .configitem { display: grid; grid-template-columns: 1fr 6rem; }
+.config .configitem { display: grid; grid-template-columns: 1fr 7rem; }
 #deluserdata::before { content: 'ユーザーデータを削除する'; display: block; }
 #deluserdata > button::before { content: '削除'; display: inline; }
+#downloadmap::before { content: 'マップデータのダウンロード(CSV)'; display: block; }
+#downloadmap > button::before { content: 'ダウンロード'; display: inline; }
 </style>
 <style>
 .sea1, .sea2, .sea3, .sea4 { cursor: pointer; opacity: 0; transition: opacity 0.5s; }
@@ -290,6 +292,50 @@ Promise.all(
             if ( !confirm( 'データはこのブラウザにしかありません。本当にデータを削除しますか？' ) ) { return; }
             user.clear();
             location.reload();
+        },
+        downloadmap: () =>
+        {
+            const csv = Object.keys( SEA_AREA ).map( ( key ) =>
+            {
+                const data = SEA_AREA[ key ];
+                return [
+                    data.no,
+                    `"${ data.title }"`,
+                    data.lv,
+                    `"${ MISSIONS[ data.missions[ 0 ].no ] }"`,
+                    data.missions[ 0 ].max,
+                    `"${ MISSIONS[ data.missions[ 1 ].no ] }"`,
+                    data.missions[ 1 ].max,
+                    `"${ MISSIONS[ data.missions[ 2 ].no ] }"`,
+                    data.missions[ 2 ].max,
+                    `"${ MISSIONS[ data.missions[ 3 ].no ] }"`,
+                    data.missions[ 3 ].max,
+                    `"${ MISSIONS[ data.missions[ 4 ].no ] }"`,
+                    data.missions[ 4 ].max,
+                ].join( ',' );
+            } );
+            csv.sort( ( a, b ) => { return a.no - b.no; } );
+            csv.unshift(
+            [
+                'no',
+                'title',
+                'lv',
+                'missions_1',
+                'value_1',
+                'missions_2',
+                'value_2',
+                'missions_3',
+                'value_3',
+                'missions_4',
+                'value_4',
+                'missions_5',
+                'value_5',
+            ].join( ',' ) );
+
+            const link = document.createElement( 'a' );
+            link.setAttribute( 'download', 'siren_area.csv' );
+            link.setAttribute( 'href', `data:text/csv;charset=UTF-8,${ csv.join( '\n' ) }` );
+            link.click();
         },
     } );
 
@@ -1173,8 +1219,10 @@ window.addEventListener('DOMContentLoaded', ( event ) =>
             <p>HTMLの比較的新しい機能を使っているため、モダンブラウザ以外では正常に動かない可能性があります。ソースコードは<a href="https://github.com/Azulamb/Siren" target=”_blank” rel=”noopener noreferrer” class="link">はGitHub</a>にて公開しています。</p>
         </div>
         <div class="config">
-            <h2>データ</h2>
+            <h2>ユーザーデータ</h2>
             <div class="configitem" id="deluserdata"><button></button></div>
+            <h2>システムデータ</h2>
+            <div class="configitem" id="downloadmap"><button></button></div>
         </div>
     </modal-dialog>
 </body>
