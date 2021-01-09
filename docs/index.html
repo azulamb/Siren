@@ -365,7 +365,7 @@ Promise.all(
         };
         back.addEventListener( 'click', selected );
         areaInfo.onselectd = selected;
-        if ( areaId === urlParams.area ) { selected(); }
+        if ( areaId === urlParams.area ) { setTimeout( selected, 500 ); }
     } );
     document.getElementById( 'showstar' ).addEventListener( 'change', ( event ) =>
     {
