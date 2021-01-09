@@ -174,7 +174,10 @@ function SelectArea( path, item )
     }
     path.dataset.area = 'selected';
     item.dataset.area = 'selected';
-    history.replaceState( null, '', `./?area=${ path.id.replace( /[^0-9]/g, '' ) }` );
+    setTimeout( () =>
+    {
+        history.replaceState( null, '', `./?area=${ path.id.replace( /[^0-9]/g, '' ) }` );
+    }, 0);
 }
 class UserData
 {
@@ -292,6 +295,19 @@ Promise.all(
 
     document.getElementById( 'loading' ).classList.add( 'hide' );
 
+    const urlParams = ( ( params ) =>
+    {
+        const data = { area: 0 };
+
+        const area = parseInt( params.get( 'area' ) );
+        if ( area && 0 < area )
+        {
+            data.area = area;
+        }
+
+        return data;
+    } )( new URLSearchParams( location.search ) );
+
     const map = document.getElementById( 'map' );
     const svg = document.getElementById( 'siren' );
     const parentRect = svg.getBoundingClientRect();
@@ -349,6 +365,7 @@ Promise.all(
         };
         back.addEventListener( 'click', selected );
         areaInfo.onselectd = selected;
+        if ( areaId === urlParams.area ) { selected(); }
     } );
     document.getElementById( 'showstar' ).addEventListener( 'change', ( event ) =>
     {
