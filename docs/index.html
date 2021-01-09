@@ -167,9 +167,14 @@ function SelectArea( path, item )
     const list = document.querySelectorAll( '[ data-area="selected" ]' );
     const selected = path.dataset.area === 'selected';
     for ( let i = list.length - 1 ; 0 <= i ; --i ) { delete list[ i ].dataset.area; }
-    if ( selected ) { return; }
+    if ( selected )
+    {
+        history.replaceState( null, '', './' );
+        return;
+    }
     path.dataset.area = 'selected';
     item.dataset.area = 'selected';
+    history.replaceState( null, '', `./?area=${ path.id.replace( /[^0-9]/g, '' ) }` );
 }
 class UserData
 {
