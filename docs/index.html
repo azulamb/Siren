@@ -371,11 +371,11 @@ Promise.all(
         Screenshot( date, complete, Object.keys( SEA_AREA ).length * 5 ).then( ( img ) =>
         {
             const canvas = document.createElement( 'canvas' );
-            canvas.width = 1000;
-            canvas.height = 700;
+            canvas.width = 800;
+            canvas.height = 560;
 
             const context = canvas.getContext( '2d' );
-            context.drawImage( img, 0, 0, 1000, 700 );
+            context.drawImage( img, 0, 0, canvas.width, canvas.height );
 
             const link = document.createElement( 'a' );
             link.download = `siren_${ date.formatNoSymbol() }.png`;
