@@ -16,7 +16,9 @@ section > div { position: relative; }
 #stars.hidestar { display: none; }
 #stars five-star { position: absolute; }
 svg { width: 100%; height: auto; display: block; }
-button { display: block; font-size: 1rem; cursor: pointer; outline: 0; }
+button { display: block; font-size: 1rem; cursor: pointer; outline: 0; background: #efefef; }
+.status { position: absolute; bottom: 2.2rem; right: 0.2rem; display: flex; }
+.status > five-star { position: absolute; top: 0.75rem; left: -0.5rem; margin: auto; }
 .menu { position: absolute; bottom: 0.2rem; right: 0.2rem; display: flex; }
 .menu > button { --size: 1.5em; font-family: monospace; width: var( --size ); height: var( --size ); line-height: 1em; text-align: center; box-sizing: border-box; border-radius: 50%; border: solid 0.1rem #8a8a8a; margin-left: 0.2rem; padding: 0; }
 #info { font-weight: bold; }
@@ -372,13 +374,7 @@ Promise.all(
     document.getElementById( 'ss' ).addEventListener( 'click', () =>
     {
         const date = new MyDate();
-        const complete = ( ( items ) =>
-        {
-
-            let complete = 0;
-            for ( let item of items ) { complete += item.complete; }
-            return complete;
-        } )( document.body.querySelectorAll( 'area-info' ) );
+        const complete = CountComplete();
         Screenshot( date, complete, Object.keys( SEA_AREA ).length * 5 ).then( ( img ) =>
         {
             const canvas = document.createElement( 'canvas' );
@@ -394,6 +390,29 @@ Promise.all(
             link.click();
         } ).catch( ( error ) => { console.error( error ); } );
     } );
+    document.getElementById( 'totalstar' ).textContent = ( Object.keys( SEA_AREA ).length * 5 ) + '';
+    const CountComplete = () =>
+    {
+        return ( ( items ) =>
+        {
+            let complete = 0;
+            for ( let item of items ) { complete += item.complete; }
+            return complete;
+        } )( document.body.querySelectorAll( 'area-info' ) );
+    };
+    const UpdateComplete = ( ( target ) =>
+    {
+        let timer = 0;
+        return () =>
+        {
+            if ( timer ) { clearTimeout( timer ); }
+            timer = setTimeout( () =>
+            {
+                target.textContent = ( CountComplete() + '' ).padStart( 3, '0' );
+                timer = 0;
+            }, 500 );
+        };
+    } )( document.getElementById( 'getstar' ) );
     ( ( funcs ) =>
     {
         document.querySelectorAll( '.configitem' ).forEach( ( item ) =>
@@ -508,6 +527,7 @@ Promise.all(
             {
                 user.setMission( areaId, index, event.detail.value );
                 star[ mission.complete ? 'light' : 'unlight' ]( index );
+                UpdateComplete();
             } );
             mission.title = MISSIONS[ info.no ] || '???';
             mission.max = info.max;
@@ -1355,6 +1375,12 @@ window.addEventListener('DOMContentLoaded', ( event ) =>
                 </svg>
             </div>
             <div id="stars"></div>
+            <div class="status">
+                <five-star light></five-star>
+                <span id="getstar">000</span>
+                /
+                <span id="totalstar">000</span>
+            </div>
             <div class="menu">
                 <div class="starconf">
                     <five-star light></five-star>
