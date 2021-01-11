@@ -4,6 +4,8 @@
 <meta charset="utf-8">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
 <title>Operation Siren</title>
+<meta content="アズールレーンのセイレーン作戦における進捗管理システム" name="description">
+<meta name="keywords" content="アズールレーン,セイレーン作戦">
 <style type="text/css">
 html { height: 100%; font-size: 3vmin; }
 body { height: 100%; overflow: hidden; padding: 0; margin: 0; position: relative; display: grid; justify-content: center; align-items: center; background: #214478; }
@@ -186,13 +188,22 @@ function Screenshot( date, complete, max )
 {
     const offsetStarSize = 30 / 2;
 
-    const map = document.getElementById( 'siren' );
     const stars = document.getElementById( 'stars' ).querySelectorAll( 'five-star' );
-
     const img = document.createElement( 'img' );
-    const parent = document.createElement( 'div' );
-    parent.innerHTML = map.outerHTML;
-    const svg = parent.children[ 0 ];
+    const svg = ( ( map ) =>
+    {
+        const parent = document.createElement( 'div' );
+        parent.innerHTML = map.outerHTML;
+        for ( let i = 1 ; i <= 4  ; ++i )
+        {
+            const seas = parent.querySelectorAll( '.sea' + i );
+            for ( let sea of seas )
+            {
+                sea.parentElement.removeChild( sea );
+            }
+        }
+        return parent.children[ 0 ];
+    } )( document.getElementById( 'siren' ) );
 
     for ( let s of stars )
     {
@@ -230,7 +241,7 @@ function Screenshot( date, complete, max )
     {
         img.onload = resolve;
         img.onerror = reject;
-        const svgimg = encodeURIComponent( parent.innerHTML.replace( /[\r\n]/g, '' ).replace( /\s{2,}/g, '' ) );
+        const svgimg = encodeURIComponent( svg.outerHTML.replace( /[\r\n]/g, '' ).replace( /\s{2,}/g, '' ) );
         img.src = `data:image/svg+xml,${ svgimg }`;
     } ).then( () => { return img; } );
 }
