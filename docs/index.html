@@ -34,7 +34,9 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; backgroun
 #modal[ data-type="info" ] > div.info, #modal[ data-type="config" ] > div.config { display: block; }
 .link { display: inline-block; padding: 0 0.2rem; text-decoration: none; }
 .config .configitem { display: grid; grid-template-columns: 1fr 7rem; }
-#deluserdata::before { content: 'ユーザーデータを削除する'; display: block; }
+#downloaduser::before { content: 'ユーザーデータのダウンロード'; display: block; }
+#downloaduser > button::before { content: 'ダウンロード'; display: inline; }
+#deluserdata::before { content: 'ユーザーデータの削除'; display: block; }
 #deluserdata > button::before { content: '削除'; display: inline; }
 #downloadmap::before { content: 'マップデータのダウンロード(CSV)'; display: block; }
 #downloadmap > button::before { content: 'ダウンロード'; display: inline; }
@@ -423,6 +425,50 @@ Promise.all(
         } );
     } )(
     {
+        downloaduser: () =>
+        {
+            const date = new MyDate();
+            const csv = Object.keys( SEA_AREA ).map( ( key ) =>
+            {
+                const data = SEA_AREA[ key ];
+                const no = data.no;
+                return [
+                    no,
+                    user.getMission( no, 0 ),
+                    data.missions[ 0 ].max,
+                    user.getMission( no, 1 ),
+                    data.missions[ 1 ].max,
+                    user.getMission( no, 2 ),
+                    data.missions[ 2 ].max,
+                    user.getMission( no, 3 ),
+                    data.missions[ 3 ].max,
+                    user.getMission( no, 4 ),
+                    data.missions[ 4 ].max,
+                    '',
+                ].join( ',' );
+            } );
+            csv.sort( ( a, b ) => { return a.no - b.no; } );
+            csv.unshift(
+            [
+                'no',
+                'missions_1',
+                'max_1',
+                'missions_2',
+                'max_2',
+                'missions_3',
+                'max_3',
+                'missions_4',
+                'max_4',
+                'missions_5',
+                'max_5',
+                '',
+            ].join( ',' ) );
+
+            const link = document.createElement( 'a' );
+            link.setAttribute( 'download', `siren_user_${ date.formatNoSymbol() }.csv` );
+            link.setAttribute( 'href', `data:text/csv;charset=UTF-8,${ csv.join( '\n' ) }` );
+            link.click();
+        },
         deluserdata: () =>
         {
             if ( !confirm( 'データはこのブラウザにしかありません。本当にデータを削除しますか？' ) ) { return; }
@@ -448,6 +494,7 @@ Promise.all(
                     data.missions[ 3 ].max,
                     `"${ MISSIONS[ data.missions[ 4 ].no ] }"`,
                     data.missions[ 4 ].max,
+                    '',
                 ].join( ',' );
             } );
             csv.sort( ( a, b ) => { return a.no - b.no; } );
@@ -466,6 +513,7 @@ Promise.all(
                 'value_4',
                 'missions_5',
                 'value_5',
+                '',
             ].join( ',' ) );
 
             const link = document.createElement( 'a' );
@@ -1408,6 +1456,7 @@ window.addEventListener('DOMContentLoaded', ( event ) =>
         </div>
         <div class="config">
             <h2>ユーザーデータ</h2>
+            <div class="configitem" id="downloaduser"><button></button></div>
             <div class="configitem" id="deluserdata"><button></button></div>
             <h2>システムデータ</h2>
             <div class="configitem" id="downloadmap"><button></button></div>
