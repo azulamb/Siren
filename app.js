@@ -898,8 +898,20 @@ Promise.all([
             path.dataset.lv = info.lv + '';
             setTimeout(() => { path.classList.add('show'); }, 3500);
             const r = path.getBoundingClientRect();
-            star.style.top = `${Math.floor((r.top - parentRect.top + (r.bottom - r.top) / 2) / parentRect.height * 1000) / 10}%`;
-            star.style.left = `${Math.floor((r.left - parentRect.left + (r.right - r.left) / 2) / parentRect.width * 1000) / 10}%`;
+            if (path.dataset.y) {
+                const y = parseFloat(path.dataset.y) || 0;
+                star.style.top = `${Math.floor((r.top - parentRect.top + (r.bottom - r.top) * y) / parentRect.height * 1000) / 10}%`;
+            }
+            else {
+                star.style.top = `${Math.floor((r.top - parentRect.top + (r.bottom - r.top) / 2) / parentRect.height * 1000) / 10}%`;
+            }
+            if (path.dataset.x) {
+                const x = parseFloat(path.dataset.x) || 0;
+                star.style.left = `${Math.floor((r.left - parentRect.left + (r.right - r.left) * x) / parentRect.width * 1000) / 10}%`;
+            }
+            else {
+                star.style.left = `${Math.floor((r.left - parentRect.left + (r.right - r.left) / 2) / parentRect.width * 1000) / 10}%`;
+            }
             stars.appendChild(star);
         }
         const createMission = () => { return new (customElements.get('mission-item'))(); };
