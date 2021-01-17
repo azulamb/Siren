@@ -597,7 +597,6 @@ window.addEventListener('DOMContentLoaded', (event) => {
 });
 class UserData {
     constructor() {
-        this.MISSION = 5;
         this.data =
             {};
     }
@@ -624,7 +623,7 @@ class UserData {
             if (!this.data[id]) {
                 this.data[id] = { m: [0, 0, 0, 0, 0] };
             }
-            for (let i = 0; i < this.MISSION; ++i) {
+            for (let i = 0; i < UserData.MISSION; ++i) {
                 this.data[id].m[i] = parseInt(this._get(`${id}_m${i}`)) || 0;
             }
         });
@@ -635,7 +634,7 @@ class UserData {
                 return;
             }
             const id = parseInt(key.replace(/[^0-9]/g, '')) || 0;
-            for (let i = 0; i < this.MISSION; ++i) {
+            for (let i = 0; i < UserData.MISSION; ++i) {
                 await this.setMission(id, i, this.data[id].m[i]);
             }
         });
@@ -646,6 +645,7 @@ class UserData {
     import() { }
     export() { return JSON.parse(JSON.stringify(this.data)); }
 }
+UserData.MISSION = 5;
 class MyDate {
     constructor() {
         this.date = new Date();
@@ -716,6 +716,113 @@ function Screenshot(date, complete, max) {
         img.src = `data:image/svg+xml,${svgimg}`;
     }).then(() => { return img; });
 }
+class Drop extends EventTarget {
+    constructor() {
+        super();
+        this.init(document.body);
+    }
+    init(target) {
+        target.addEventListener('dragover', (event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            if (event.dataTransfer) {
+                event.dataTransfer.dropEffect = 'copy';
+            }
+        });
+        target.addEventListener('drop', (event) => {
+            event.stopPropagation();
+            event.preventDefault();
+            const dataTransfer = event.dataTransfer;
+            if (!dataTransfer) {
+                return;
+            }
+            const files = dataTransfer.files;
+            if (files.length < 1) {
+                return;
+            }
+            const file = files[0];
+            this.onDrop(file);
+        });
+    }
+    onDrop(file) {
+        this.dispatchEvent(new CustomEvent('dropfile', { detail: { file: file } }));
+    }
+}
+class CSV {
+    constructor(header) {
+        this.header = Array.isArray(header) ? header.map((data) => { return `"${data}"`; }).join(',') : header.replace(/\,+$/, '');
+        this.lines = [];
+    }
+    add(data) {
+        this.lines.push(typeof (data) === 'string' ? data : data.map((data) => {
+            return typeof data === 'number' ? data : `"${data}"`;
+        }).join(','));
+        return this;
+    }
+    toString() {
+        return this.header + ',\n' + this.lines.join(',\n');
+    }
+    toDataURL() {
+        return `data:text/csv;charset=UTF-8,${encodeURIComponent(this.toString())}`;
+    }
+    downloadLink(filename) {
+        const link = document.createElement('a');
+        link.setAttribute('download', `${filename}.csv`);
+        link.setAttribute('href', this.toDataURL());
+        return link;
+    }
+    parseLine(line) {
+        return line.split(',').map((data) => {
+            const value = data.replace(/^\"(.*)\"$/, '$1');
+            if (!value) {
+                return '';
+            }
+            if (!value.match(/[^0-9]/)) {
+                return parseInt(value);
+            }
+            const float = parseFloat(value);
+            if (isFinite(float)) {
+                return float;
+            }
+            return value;
+        });
+    }
+    get max() { return this.lines.length; }
+    read(line) {
+        return this.lines[line] || '';
+    }
+    load(line) {
+        return this.parseLine(this.read(line));
+    }
+    parse() {
+        const header = this.header.split(',').map((data) => { return data.replace(/^\"(.*)\"$/, '$1'); });
+        return this.lines.map((line) => {
+            const data = {};
+            this.parseLine(line).forEach((value, index) => {
+                const key = header[index];
+                if (!key) {
+                    return key;
+                }
+                data[key] = value;
+            });
+            return data;
+        });
+    }
+    static async load(file) {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onerror = reject;
+            reader.onabort = reject;
+            reader.onload = (event) => { resolve(reader.result); };
+            reader.readAsText(file);
+        }).then((buf) => {
+            const lines = buf.split(/\r\n|\r|\n/);
+            const csv = new CSV(lines.shift() || '');
+            lines.forEach((line) => { csv.add(line); });
+            return csv;
+        });
+    }
+}
 const user = new UserData();
 Promise.all([
     user.load(),
@@ -728,12 +835,80 @@ Promise.all([
     customElements.whenDefined('area-info'),
     customElements.whenDefined('toggle-button'),
 ]).then(() => {
+    return new Promise((resolve) => { setTimeout(resolve, 50); });
+}).then(() => {
     ((modal) => {
         ['info', 'config'].forEach((button) => {
             document.getElementById(button).addEventListener('click', () => {
                 modal.dataset.type = button;
                 modal.show();
             });
+        });
+        let importData = () => { };
+        document.getElementById('import').addEventListener('click', () => { importData(); });
+        const drop = new Drop();
+        const tbody = document.getElementById('diff');
+        drop.addEventListener('dropfile', (event) => {
+            importData = () => { };
+            const file = event.detail.file;
+            console.log(file);
+            CSV.load(file).then((csv) => {
+                tbody.innerHTML = '';
+                const data = Object.assign({}, SEA_AREA);
+                Object.keys(data).forEach((key) => {
+                    data[key].missions = data[key].missions.map((mission) => {
+                        return Object.assign({ now: 0 }, mission);
+                    });
+                });
+                const newData = csv.parse().filter((user) => { return !!data[`sa${user.no}`]; }).map((user) => {
+                    const area = data[`sa${user.no}`];
+                    for (let i = 0; i < UserData.MISSION; ++i) {
+                        const value = user[`missions_${i + 1}`];
+                        if (!value || typeof (value) !== 'number' || value <= 0) {
+                            continue;
+                        }
+                        area.missions[i].now = Math.min(Math.floor(value), area.missions[i].max);
+                    }
+                    return {
+                        no: user.no,
+                        missions: area.missions.map((data) => { return data.now; }),
+                    };
+                });
+                const list = Object.keys(data).map((key) => { return data[key]; });
+                list.sort((a, b) => { return a.no - b.no; });
+                tbody.innerHTML = '';
+                list.forEach((data) => {
+                    const no = document.createElement('td');
+                    no.textContent = data.no + '';
+                    const area = document.createElement('td');
+                    area.textContent = data.title;
+                    const tr = document.createElement('tr');
+                    tr.appendChild(no);
+                    tr.appendChild(area);
+                    data.missions.forEach((mission, index) => {
+                        const now = document.createElement('td');
+                        now.textContent = user.getMission(data.no, index) + '';
+                        const connect = document.createElement('td');
+                        connect.classList.add('connect');
+                        const value = document.createElement('td');
+                        value.textContent = mission.now + '';
+                        tr.appendChild(now);
+                        tr.appendChild(connect);
+                        tr.appendChild(value);
+                    });
+                    tbody.appendChild(tr);
+                });
+                importData = () => {
+                    newData.forEach((data) => {
+                        for (let i = 0; i < data.missions.length; ++i) {
+                            user.setMission(data.no, i, data.missions[i]);
+                        }
+                    });
+                    location.reload();
+                };
+                modal.dataset.type = 'import';
+                modal.show();
+            }).catch((error) => { console.error(error); });
         });
     })(document.getElementById('modal'));
     document.getElementById('ss').addEventListener('click', () => {
@@ -784,27 +959,7 @@ Promise.all([
     })({
         downloaduser: () => {
             const date = new MyDate();
-            const csv = Object.keys(SEA_AREA).map((key) => {
-                const data = SEA_AREA[key];
-                const no = data.no;
-                return [
-                    no,
-                    user.getMission(no, 0),
-                    data.missions[0].max,
-                    user.getMission(no, 1),
-                    data.missions[1].max,
-                    user.getMission(no, 2),
-                    data.missions[2].max,
-                    user.getMission(no, 3),
-                    data.missions[3].max,
-                    user.getMission(no, 4),
-                    data.missions[4].max,
-                    '',
-                ];
-            });
-            csv.sort((a, b) => { return a[0] - b[0]; });
-            const lines = csv.map((data) => { return data.join(','); });
-            lines.unshift([
+            const csv = new CSV([
                 'no',
                 'missions_1',
                 'max_1',
@@ -816,12 +971,28 @@ Promise.all([
                 'max_4',
                 'missions_5',
                 'max_5',
-                '',
-            ].join(','));
-            const link = document.createElement('a');
-            link.setAttribute('download', `siren_user_${date.formatNoSymbol()}.csv`);
-            link.setAttribute('href', `data:text/csv;charset=UTF-8,${lines.join('\n')}`);
-            link.click();
+            ]);
+            const list = Object.keys(SEA_AREA).map((key) => {
+                return SEA_AREA[key];
+            });
+            list.sort((a, b) => { return a.no - b.no; });
+            list.forEach((data) => {
+                const no = data.no;
+                csv.add([
+                    no,
+                    user.getMission(no, 0),
+                    data.missions[0].max,
+                    user.getMission(no, 1),
+                    data.missions[1].max,
+                    user.getMission(no, 2),
+                    data.missions[2].max,
+                    user.getMission(no, 3),
+                    data.missions[3].max,
+                    user.getMission(no, 4),
+                    data.missions[4].max,
+                ]);
+            });
+            csv.downloadLink(`siren_user_${date.formatNoSymbol()}`).click();
         },
         deluserdata: () => {
             if (!confirm('データはこのブラウザにしかありません。本当にデータを削除しますか？')) {
@@ -831,28 +1002,7 @@ Promise.all([
             location.reload();
         },
         downloadmap: () => {
-            const csv = Object.keys(SEA_AREA).map((key) => {
-                const data = SEA_AREA[key];
-                return [
-                    data.no,
-                    `"${data.title}"`,
-                    data.lv,
-                    `"${MISSIONS[data.missions[0].no]}"`,
-                    data.missions[0].max,
-                    `"${MISSIONS[data.missions[1].no]}"`,
-                    data.missions[1].max,
-                    `"${MISSIONS[data.missions[2].no]}"`,
-                    data.missions[2].max,
-                    `"${MISSIONS[data.missions[3].no]}"`,
-                    data.missions[3].max,
-                    `"${MISSIONS[data.missions[4].no]}"`,
-                    data.missions[4].max,
-                    '',
-                ];
-            });
-            csv.sort((a, b) => { return a[0] - b[0]; });
-            const lines = csv.map((data) => { return data.join(','); });
-            lines.unshift([
+            const csv = new CSV([
                 'no',
                 'title',
                 'lv',
@@ -866,12 +1016,29 @@ Promise.all([
                 'max_4',
                 'missions_5',
                 'max_5',
-                '',
-            ].join(','));
-            const link = document.createElement('a');
-            link.setAttribute('download', 'siren_area.csv');
-            link.setAttribute('href', `data:text/csv;charset=UTF-8,${lines.join('\n')}`);
-            link.click();
+            ]);
+            const list = Object.keys(SEA_AREA).map((key) => {
+                return SEA_AREA[key];
+            });
+            list.sort((a, b) => { return a.no - b.no; });
+            list.forEach((data) => {
+                csv.add([
+                    data.no,
+                    data.title,
+                    data.lv,
+                    MISSIONS[data.missions[0].no],
+                    data.missions[0].max,
+                    MISSIONS[data.missions[1].no],
+                    data.missions[1].max,
+                    MISSIONS[data.missions[2].no],
+                    data.missions[2].max,
+                    MISSIONS[data.missions[3].no],
+                    data.missions[3].max,
+                    MISSIONS[data.missions[4].no],
+                    data.missions[4].max,
+                ]);
+            });
+            csv.downloadLink('siren_area').click();
         },
     });
     document.getElementById('loading').classList.add('hide');

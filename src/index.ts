@@ -2,8 +2,11 @@
 /// <reference path="./components.ts" />
 /// <reference path="./userdata.ts" />
 /// <reference path="./screenshot.ts" />
+/// <reference path="./drop.ts" />
+/// <reference path="./csv.ts" />
 
 const user = new UserData();
+
 Promise.all(
 [
 	user.load(),
@@ -17,6 +20,9 @@ Promise.all(
 	customElements.whenDefined( 'toggle-button' ),
 ] ).then( () =>
 {
+	return new Promise( ( resolve ) => { setTimeout( resolve, 50 ); } );
+} ).then( () =>
+{
 	( ( modal ) =>
 	{
 		[ 'info', 'config' ].forEach( ( button ) =>
@@ -26,6 +32,107 @@ Promise.all(
 				modal.dataset.type = button;
 				modal.show();
 			} );
+		} );
+
+		let importData = () => {};
+		(<HTMLButtonElement>document.getElementById( 'import' )).addEventListener( 'click', () => { importData(); } );
+
+		const drop = new Drop();
+		const tbody = <HTMLElement>document.getElementById( 'diff' );
+		drop.addEventListener( 'dropfile', ( event: DropFileEvent ) =>
+		{
+			importData = () => {};
+			const file = event.detail.file;
+			console.log( file );
+			CSV.load( file ).then( ( csv ) =>
+			{
+				tbody.innerHTML = '';
+
+				const data: { [ keys: string ]: { missions: { no: number, max: number, now: number }[] } & SEA_AREA_DATA } = <any>Object.assign( {}, SEA_AREA );
+				Object.keys( data ).forEach( ( key ) =>
+				{
+					data[ key ].missions = data[ key ].missions.map( ( mission ) =>
+					{
+						return Object.assign( { now: 0 }, mission );
+					} );
+				} );
+
+				const newData = csv.parse<{
+					no: number;
+					max_1: number;
+					max_2: number;
+					max_3: number;
+					max_4: number;
+					max_5: number;
+					missions_1: number;
+					missions_2: number;
+					missions_3: number;
+					missions_4: number;
+					missions_5: number;
+				}>().filter( ( user ) => { return !!data[ `sa${ user.no }` ]; } ).map( ( user ) =>
+				{
+					const area = data[ `sa${ user.no }` ];
+					for ( let i = 0 ; i < UserData.MISSION ; ++i )
+					{
+						const value: number = (<any>user)[ `missions_${ i + 1 }` ];
+						if ( !value || typeof( value ) !== 'number' || value <= 0 ) { continue; }
+						area.missions[ i ].now = Math.min( Math.floor( value ), area.missions[ i ].max );
+					}
+					return {
+						no: user.no,
+						missions: area.missions.map( ( data ) => { return data.now; } ),
+					};
+				} );
+
+				const list = Object.keys( data ).map( ( key ) => { return data[ key ]; } );
+				list.sort( ( a, b ) => { return a.no - b.no; } );
+
+				tbody.innerHTML = '';
+				list.forEach( ( data ) =>
+				{
+					const no = document.createElement( 'td' );
+					no.textContent = data.no + '';
+
+					const area = document.createElement( 'td' );
+					area.textContent = data.title;
+
+					const tr = document.createElement( 'tr' );
+					tr.appendChild( no );
+					tr.appendChild( area );
+
+					data.missions.forEach( ( mission, index ) =>
+					{
+						const now = document.createElement( 'td' );
+						now.textContent = user.getMission( data.no, index ) + '';
+
+						const connect = document.createElement( 'td' );
+						connect.classList.add( 'connect' );
+
+						const value = document.createElement( 'td' );
+						value.textContent = mission.now + '';
+
+						tr.appendChild( now );
+						tr.appendChild( connect );
+						tr.appendChild( value );
+					} );
+
+					tbody.appendChild( tr );
+				});
+
+				importData = () =>
+				{
+					newData.forEach( ( data ) =>
+					{
+						for ( let i = 0 ; i < data.missions.length ; ++i )
+						{
+							user.setMission( data.no, i, data.missions[ i ] );
+						}
+					} );
+					location.reload();
+				};
+				modal.dataset.type = 'import';
+				modal.show();
+			} ).catch( ( error ) => { console.error( error ); } );
 		} );
 	} )( <ModalDialogElement>document.getElementById( 'modal' ) );
 
@@ -88,29 +195,7 @@ Promise.all(
 		downloaduser: () =>
 		{
 			const date = new MyDate();
-			const csv = Object.keys( SEA_AREA ).map( ( key ) =>
-			{
-				const data = SEA_AREA[ key ];
-				const no = data.no;
-				return [
-					no,
-					user.getMission( no, 0 ),
-					data.missions[ 0 ].max,
-					user.getMission( no, 1 ),
-					data.missions[ 1 ].max,
-					user.getMission( no, 2 ),
-					data.missions[ 2 ].max,
-					user.getMission( no, 3 ),
-					data.missions[ 3 ].max,
-					user.getMission( no, 4 ),
-					data.missions[ 4 ].max,
-					'',
-				];
-			} );
-			csv.sort( ( a, b ) => { return <number>a[ 0 ] - <number>b[ 0 ]; } );
-
-			const lines = csv.map( ( data ) => { return data.join( ',' ); } );
-			lines.unshift(
+			const csv = new CSV(
 			[
 				'no',
 				'missions_1',
@@ -123,13 +208,32 @@ Promise.all(
 				'max_4',
 				'missions_5',
 				'max_5',
-				'',
-			].join( ',' ) );
+			] );
+			const list = Object.keys( SEA_AREA ).map( ( key ) =>
+			{
+				return  SEA_AREA[ key ];
+			} );
+			list.sort( ( a, b ) => { return a.no - b.no; } );
+			list.forEach( ( data ) =>
+			{
+				const no = data.no;
+				csv.add(
+				[
+					no,
+					user.getMission( no, 0 ),
+					data.missions[ 0 ].max,
+					user.getMission( no, 1 ),
+					data.missions[ 1 ].max,
+					user.getMission( no, 2 ),
+					data.missions[ 2 ].max,
+					user.getMission( no, 3 ),
+					data.missions[ 3 ].max,
+					user.getMission( no, 4 ),
+					data.missions[ 4 ].max,
+				] );
+			} );
 
-			const link = document.createElement( 'a' );
-			link.setAttribute( 'download', `siren_user_${ date.formatNoSymbol() }.csv` );
-			link.setAttribute( 'href', `data:text/csv;charset=UTF-8,${ lines.join( '\n' ) }` );
-			link.click();
+			csv.downloadLink( `siren_user_${ date.formatNoSymbol() }` ).click();
 		},
 		deluserdata: () =>
 		{
@@ -139,30 +243,7 @@ Promise.all(
 		},
 		downloadmap: () =>
 		{
-			const csv = Object.keys( SEA_AREA ).map( ( key ) =>
-			{
-				const data = SEA_AREA[ key ];
-				return [
-					data.no,
-					`"${ data.title }"`,
-					data.lv,
-					`"${ MISSIONS[ data.missions[ 0 ].no ] }"`,
-					data.missions[ 0 ].max,
-					`"${ MISSIONS[ data.missions[ 1 ].no ] }"`,
-					data.missions[ 1 ].max,
-					`"${ MISSIONS[ data.missions[ 2 ].no ] }"`,
-					data.missions[ 2 ].max,
-					`"${ MISSIONS[ data.missions[ 3 ].no ] }"`,
-					data.missions[ 3 ].max,
-					`"${ MISSIONS[ data.missions[ 4 ].no ] }"`,
-					data.missions[ 4 ].max,
-					'',
-				];
-			} );
-			csv.sort( ( a, b ) => { return <number>a[ 0 ] - <number>b[ 0 ]; } );
-
-			const lines = csv.map( ( data ) => { return data.join( ',' ); } );
-			lines.unshift(
+			const csv = new CSV(
 			[
 				'no',
 				'title',
@@ -177,13 +258,33 @@ Promise.all(
 				'max_4',
 				'missions_5',
 				'max_5',
-				'',
-			].join( ',' ) );
+			] );
+			const list = Object.keys( SEA_AREA ).map( ( key ) =>
+			{
+				return SEA_AREA[ key ];
+			} );
+			list.sort( ( a, b ) => { return a.no - b.no; } );
+			list.forEach( ( data ) =>
+			{
+				csv.add(
+				[
+					data.no,
+					data.title,
+					data.lv,
+					MISSIONS[ data.missions[ 0 ].no ],
+					data.missions[ 0 ].max,
+					MISSIONS[ data.missions[ 1 ].no ],
+					data.missions[ 1 ].max,
+					MISSIONS[ data.missions[ 2 ].no ],
+					data.missions[ 2 ].max,
+					MISSIONS[ data.missions[ 3 ].no ],
+					data.missions[ 3 ].max,
+					MISSIONS[ data.missions[ 4 ].no ],
+					data.missions[ 4 ].max,
+				] );
+			} );
 
-			const link = document.createElement( 'a' );
-			link.setAttribute( 'download', 'siren_area.csv' );
-			link.setAttribute( 'href', `data:text/csv;charset=UTF-8,${ lines.join( '\n' ) }` );
-			link.click();
+			csv.downloadLink( 'siren_area' ).click();
 		},
 	} );
 

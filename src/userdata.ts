@@ -1,17 +1,9 @@
 declare const MISSIONS: string[];
-declare const SEA_AREA: {
-	[ keys: string ]:
-	{
-		no: number;
-		lv: number;
-		title: string;
-		missions: { no: number, max: number }[];
-	}
-};
+declare const SEA_AREA: { [ keys: string ]: SEA_AREA_DATA };
 
 class UserData
 {
-	private MISSION: number = 5;
+	static MISSION: number = 5;
 	private data: { [ keys: string ]: { m: number[]; } };
 
 	constructor()
@@ -54,7 +46,7 @@ class UserData
 		{
 			const id = `sa${ info.no }`;
 			if ( !this.data[ id ] ) { this.data[ id ] = { m: [ 0, 0, 0, 0, 0 ] }; }
-			for ( let i = 0 ; i < this.MISSION ; ++i )
+			for ( let i = 0 ; i < UserData.MISSION ; ++i )
 			{
 				this.data[ id ].m[ i ] = parseInt( this._get( `${ id }_m${ i }` ) ) || 0;
 			}
@@ -67,7 +59,7 @@ class UserData
 		{
 			if ( !this.data[ key ] ) { return; }
 			const id = parseInt( key.replace( /[^0-9]/g, '' ) ) || 0;
-			for ( let i = 0 ; i < this.MISSION ; ++i )
+			for ( let i = 0 ; i < UserData.MISSION ; ++i )
 			{
 				await this.setMission( id, i, this.data[ id ].m[ i ] );
 			}

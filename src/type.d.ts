@@ -55,3 +55,11 @@ interface ToggleButtonElement extends HTMLElement
 	toggle(): ToggleButtonElement;
 	checked: boolean;
 }
+
+interface SEA_AREA_DATA
+{
+	no: number;
+	lv: number;
+	title: string;
+	missions: { no: number, max: number }[];
+}
