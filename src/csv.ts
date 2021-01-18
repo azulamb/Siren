@@ -87,6 +87,7 @@ class CSV
 	{
 		return new Promise<string>( ( resolve, reject ) =>
 		{
+			if ( !file.name.match( /\.csv$/ ) ) { return reject( new Error( 'Not CSV.' ) ); }
 			const reader = new FileReader();
 			reader.onerror = reject;
 			reader.onabort = reject;

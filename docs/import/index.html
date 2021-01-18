@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<link rel="icon" href="../favicon.svg" type="image/svg+xml">
+<title>データのインポート - セイレーン作戦進捗確認ツール</title>
+<style type="text/css">
+html { height: 100%; font-size: 3vmin; }
+body { height: 100%; padding: 0; margin: 0; background: #214478; }
+h1, h2, h3 { margin: 0 0 1rem; }
+h1 { font-size: 1.5rem; }
+h2 { font-size: 1.3rem; }
+h3 { font-size: 1.1rem; }
+section {width: 100vmin; margin: auto; padding: 0.5rem 0; }
+</style>
+</head>
+<body>
+    <section>
+        <h1>セイレーン作戦進捗確認ツール - データのインポート</h1>
+        <p>このツールはCSVによるデータのエクスポートとインポートに対応しています。</p>
+
+        <h2>手順</h2>
+        <p>手順は以下のようになります。</p>
+        <ol>
+            <li>ユーザーデータをダウンロードする</li>
+            <li>ダウンロードしたCSVを編集する</li>
+            <li>ユーザーデータをインポートする</li>
+        </ol>
+
+        <h2>1. ユーザーデータをエクスポートする</h2>
+        <p>ユーザーデータをダウンロードしてください。CSV形式で現在のデータを出力することが出来ます。</p>
+
+        <h2>2. ダウンロードしたCSVを編集する</h2>
+        <p>編集にはいくつか方法があります。半角英数字しか使っていないためWindowsであればメモ帳などのテキストエディタでも可能ですが、表計算ソフトを使うことをおすすめします。</p>
+        <h3>Google Spreadsheetを使う</h3>
+        <ol>
+            <li><a href="https://docs.google.com/spreadsheets/u/0/" target="_blank">Google Spreadsheet</a>を開きます。</li>
+            <li>新しい空白のSpreadsheetを作ります。</li>
+            <li>左上のメニューの「ファイル」→「インポート」でインポート画面を開き、「アップロード」のタグを選択します。</li>
+            <li>ダウンロードしたCSVをアップロードします。</li>
+            <li>デフォルトの設定のままデータをインポートします。</li>
+            <li>編集した後左上メニューの「ファイル」→「ダウンロード」→「カンマ区切りの値（.csv、現在のシート）」をクリックして編集後のユーザーデータをダウンロードします。</li>
+        </ol>
+        <p>これでデータのインポートが出来ました。「mission_1」などと書かれた列が入力する値で、「max_1」などと書かれた列が任務の最大値となっています。</p>
+        <p>（ユーザーデータ単体で進捗管理できるよう現在値と最大値を一緒に出力しています。）</p>
+        <p>後はセイレーン作戦の海域探索のところから得られるデータを入力していきます。</p>
+        <p>具体的には「11 カリブ海」（番号が11）の「異常気象区域を調査する」（任務の上から2番目）が「10」だったときはCSVでのnoが「11」の行の「mission_2」の列の値を「10」に書き換えます。</p>
+
+        <h2>3. ユーザーデータをインポートする</h2>
+        <p>ダウンロードしたCSVをセイレーン作戦進捗管理ツールにドラッグ＆ドロップするか、</p>
+    </section>
+</body>
+</html>

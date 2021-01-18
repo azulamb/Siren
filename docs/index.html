@@ -36,19 +36,24 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; backgroun
 #modal > div > p { font-size: 0.6rem; margin: 0.5rem; }
 #modal[ data-type="info" ] > div.info, #modal[ data-type="config" ] > div.config { display: block; }
 #modal[ data-type="import"] > div.import { display: grid; }
+#modal button, #modal label { display: block; font-size: 1rem; cursor: pointer; outline: 0; background: #acf; text-align: center; border: none; border-radius: 0.2em; transition: background 0.5s; }
+#modal button:hover, #modal label:hover { background: #59f; }
 .link { display: inline-block; padding: 0 0.2rem; text-decoration: none; }
-.config .configitem { display: grid; grid-template-columns: 1fr 8rem; }
+.config .configitem { display: grid; grid-template-columns: 1fr 8rem; margin: 0.5rem 0; }
 #downloaduser::before { content: 'ユーザーデータのダウンロード'; display: block; }
 #downloaduser > button::before { content: 'ダウンロード'; display: inline; }
+#importuser::before { content: 'ユーザーデータのインポート'; display: block; }
+#importuser > label::before { content: 'インポート'; display: inline; }
+#importcsv { display: none; }
 #deluserdata::before { content: 'ユーザーデータの削除'; display: block; }
 #deluserdata > button::before { content: '削除'; display: inline; }
 #downloadmap::before { content: 'マップデータのダウンロード(CSV)'; display: block; }
 #downloadmap > button::before { content: 'ダウンロード'; display: inline; }
 .import { display: grid; grid-template-columns: 100%; grid-template-rows: 1.5rem 1fr 1.5rem; }
 .import table { width: 100%; }
-.import table thead tr { background: #7769f1; color: #c3c3c3; }
-.import table tbody tr:nth-child( odd ) { background: #bbc6fb; }
-.import table tbody tr:nth-child( even ) { background: #bbd7f5; }
+.import table thead tr { background: #59f; }
+.import table tbody tr:nth-child( odd ) { background: #d5e5ff; }
+.import table tbody tr:nth-child( even ) { background: #acf; }
 .import table tbody td:nth-child( odd ) { background: rgba(0,0,0,0.2); }
 .import table tbody td:nth-child( even ) { background: rgba(0,0,0,0.3); }
 .import table tbody td.connect{ text-align: center; font-size: 0.5rem; }
@@ -389,6 +394,7 @@ const SEA_AREA =
         <div class="config">
             <h2>ユーザーデータ</h2>
             <div class="configitem" id="downloaduser"><button></button></div>
+            <div class="configitem" id="importuser"><label><input id="importcsv" type="file" accept=".csv"></label></div>
             <div class="configitem" id="deluserdata"><button></button></div>
             <h2>システムデータ</h2>
             <div class="configitem" id="downloadmap"><button></button></div>
@@ -396,7 +402,7 @@ const SEA_AREA =
         <div class="import">
             <h2>データ取り込み</h2>
             <div>
-                <p>以下データを取り込みますか？</p>
+                <p>現在のデータは上書きされます。以下データを取り込みますか？</p>
                 <table>
                     <thead>
                         <tr>
@@ -1228,6 +1234,9 @@ class CSV {
     }
     static async load(file) {
         return new Promise((resolve, reject) => {
+            if (!file.name.match(/\.csv$/)) {
+                return reject(new Error('Not CSV.'));
+            }
             const reader = new FileReader();
             reader.onerror = reject;
             reader.onabort = reject;
@@ -1255,79 +1264,88 @@ Promise.all([
 ]).then(() => {
     return new Promise((resolve) => { setTimeout(resolve, 50); });
 }).then(() => {
-    ((modal) => {
+    let importData = () => { };
+    const importUserData = (file) => {
+        const tbody = document.getElementById('diff');
+        tbody.innerHTML = '';
+        CSV.load(file).then((csv) => {
+            const data = JSON.parse(JSON.stringify(SEA_AREA));
+            Object.keys(data).forEach((key) => {
+                data[key].missions = data[key].missions.map((mission) => {
+                    return Object.assign({ now: 0 }, mission);
+                });
+            });
+            const newData = csv.parse().filter((user) => { return !!data[`sa${user.no}`]; }).map((user) => {
+                const area = data[`sa${user.no}`];
+                for (let i = 0; i < UserData.MISSION; ++i) {
+                    const value = user[`missions_${i + 1}`];
+                    if (!value || typeof (value) !== 'number' || value <= 0) {
+                        continue;
+                    }
+                    area.missions[i].now = Math.min(Math.floor(value), area.missions[i].max);
+                }
+                return {
+                    no: user.no,
+                    missions: area.missions.map((data) => { return data.now; }),
+                };
+            });
+            const list = Object.keys(data).map((key) => { return data[key]; });
+            list.sort((a, b) => { return a.no - b.no; });
+            tbody.innerHTML = '';
+            list.forEach((data) => {
+                const no = document.createElement('td');
+                no.textContent = data.no + '';
+                const area = document.createElement('td');
+                area.textContent = data.title;
+                const tr = document.createElement('tr');
+                tr.appendChild(no);
+                tr.appendChild(area);
+                data.missions.forEach((mission, index) => {
+                    const now = document.createElement('td');
+                    now.textContent = user.getMission(data.no, index) + '';
+                    const connect = document.createElement('td');
+                    connect.classList.add('connect');
+                    const value = document.createElement('td');
+                    value.textContent = mission.now + '';
+                    tr.appendChild(now);
+                    tr.appendChild(connect);
+                    tr.appendChild(value);
+                });
+                tbody.appendChild(tr);
+            });
+            importData = () => {
+                newData.forEach((data) => {
+                    for (let i = 0; i < data.missions.length; ++i) {
+                        user.setMission(data.no, i, data.missions[i]);
+                    }
+                });
+                location.reload();
+            };
+            modal.dataset.type = 'import';
+            modal.show();
+        }).catch((error) => { console.error(error); });
+    };
+    document.getElementById('importcsv').addEventListener('change', (event) => {
+        const files = event.target.files;
+        if (!files || !files[0]) {
+            return;
+        }
+        importUserData(files[0]);
+    });
+    const modal = ((modal) => {
         ['info', 'config'].forEach((button) => {
             document.getElementById(button).addEventListener('click', () => {
                 modal.dataset.type = button;
                 modal.show();
             });
         });
-        let importData = () => { };
         document.getElementById('import').addEventListener('click', () => { importData(); });
         const drop = new Drop();
-        const tbody = document.getElementById('diff');
         drop.addEventListener('dropfile', (event) => {
             importData = () => { };
-            const file = event.detail.file;
-            console.log(file);
-            CSV.load(file).then((csv) => {
-                tbody.innerHTML = '';
-                const data = Object.assign({}, SEA_AREA);
-                Object.keys(data).forEach((key) => {
-                    data[key].missions = data[key].missions.map((mission) => {
-                        return Object.assign({ now: 0 }, mission);
-                    });
-                });
-                const newData = csv.parse().filter((user) => { return !!data[`sa${user.no}`]; }).map((user) => {
-                    const area = data[`sa${user.no}`];
-                    for (let i = 0; i < UserData.MISSION; ++i) {
-                        const value = user[`missions_${i + 1}`];
-                        if (!value || typeof (value) !== 'number' || value <= 0) {
-                            continue;
-                        }
-                        area.missions[i].now = Math.min(Math.floor(value), area.missions[i].max);
-                    }
-                    return {
-                        no: user.no,
-                        missions: area.missions.map((data) => { return data.now; }),
-                    };
-                });
-                const list = Object.keys(data).map((key) => { return data[key]; });
-                list.sort((a, b) => { return a.no - b.no; });
-                tbody.innerHTML = '';
-                list.forEach((data) => {
-                    const no = document.createElement('td');
-                    no.textContent = data.no + '';
-                    const area = document.createElement('td');
-                    area.textContent = data.title;
-                    const tr = document.createElement('tr');
-                    tr.appendChild(no);
-                    tr.appendChild(area);
-                    data.missions.forEach((mission, index) => {
-                        const now = document.createElement('td');
-                        now.textContent = user.getMission(data.no, index) + '';
-                        const connect = document.createElement('td');
-                        connect.classList.add('connect');
-                        const value = document.createElement('td');
-                        value.textContent = mission.now + '';
-                        tr.appendChild(now);
-                        tr.appendChild(connect);
-                        tr.appendChild(value);
-                    });
-                    tbody.appendChild(tr);
-                });
-                importData = () => {
-                    newData.forEach((data) => {
-                        for (let i = 0; i < data.missions.length; ++i) {
-                            user.setMission(data.no, i, data.missions[i]);
-                        }
-                    });
-                    location.reload();
-                };
-                modal.dataset.type = 'import';
-                modal.show();
-            }).catch((error) => { console.error(error); });
+            importUserData(event.detail.file);
         });
+        return modal;
     })(document.getElementById('modal'));
     document.getElementById('ss').addEventListener('click', () => {
         const date = new MyDate();
