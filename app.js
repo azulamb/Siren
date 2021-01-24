@@ -694,16 +694,16 @@ function Screenshot(date, complete, max) {
         }
         const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
         g.innerHTML = s.svg.innerHTML;
-        g.setAttributeNS(null, 'style', `transform:translate(860px,630px)`);
+        g.setAttributeNS(null, 'style', `transform:translate(860px,665px)`);
         svg.appendChild(g);
     })(document.querySelector('five-star[ light ]'));
     [
-        `${date.formatDate()}`,
         `${(complete + '').padStart(3, '0')}/${max}`,
+        `${date.formatDate()}`,
     ].forEach((str, index) => {
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
-        text.setAttributeNS(null, 'x', '980');
-        text.setAttributeNS(null, 'y', (680 - index * 30) + '');
+        text.setAttributeNS(null, 'x', `${980 - index * 140}`);
+        text.setAttributeNS(null, 'y', '690');
         text.setAttributeNS(null, 'font-size', '20');
         text.setAttributeNS(null, 'text-anchor', 'end');
         text.textContent = str;
