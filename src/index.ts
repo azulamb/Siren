@@ -353,6 +353,8 @@ Promise.all(
 				star.style.left = `${ Math.floor( ( r.left - parentRect.left + ( r.right - r.left ) / 2 ) / parentRect.width * 1000 ) / 10 }%`;
 			}
 			stars.appendChild( star );
+
+			path.classList.add( 'f', ... info.missions.filter( ( item ) => { return 0 < item.no; } ).map( ( item ) => { return `m${ item.no }`; } ) );
 		}
 
 		const createMission = () => { return <MissionItemElement>new ( customElements.get( 'mission-item' ) )(); };
@@ -397,4 +399,36 @@ Promise.all(
 		const checked = (<ToggleButtonElement>event.target).checked;
 		stars.classList[ checked ? 'remove' : 'add' ]( 'hidestar' );
 	} );
+
+	( ( select, svg ) =>
+	{
+		MISSIONS.forEach( ( mission, index ) =>
+		{
+			const option = document.createElement( 'option' );
+			option.value = index + '';
+			if ( index === 0 )
+			{
+				option.textContent = '-';
+			} else
+			{
+				option.textContent = mission;
+			}
+			select.appendChild( option );
+		} );
+
+		select.addEventListener( 'change', ( event ) =>
+		{
+			const value = select.options[ select.selectedIndex ].value;
+			if ( value === '0' )
+			{
+				delete svg.dataset.mission;
+			} else
+			{
+				svg.dataset.mission = value;
+			}
+		} );
+	} )(
+		<HTMLSelectElement>document.getElementById( 'missions' ),
+		<HTMLSelectElement>document.getElementById( 'siren' )
+	);
 } );

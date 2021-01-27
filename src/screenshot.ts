@@ -76,9 +76,10 @@ function Screenshot( date: MyDate, complete: number, max: number )
 	{
 		const text = document.createElementNS( 'http://www.w3.org/2000/svg','text' );
 		text.setAttributeNS( null, 'x', `${ 980 - index * 140 }` );
-		text.setAttributeNS( null, 'y', '690' );
+		text.setAttributeNS( null, 'y', '687' );
 		text.setAttributeNS( null, 'font-size', '20' );
 		text.setAttributeNS( null, 'text-anchor', 'end' );
+		text.setAttributeNS( null, 'fill', '#dcdcdc' );
 		text.textContent = str;
 		svg.appendChild( text );
 	} );

@@ -703,9 +703,10 @@ function Screenshot(date, complete, max) {
     ].forEach((str, index) => {
         const text = document.createElementNS('http://www.w3.org/2000/svg', 'text');
         text.setAttributeNS(null, 'x', `${980 - index * 140}`);
-        text.setAttributeNS(null, 'y', '690');
+        text.setAttributeNS(null, 'y', '687');
         text.setAttributeNS(null, 'font-size', '20');
         text.setAttributeNS(null, 'text-anchor', 'end');
+        text.setAttributeNS(null, 'fill', '#dcdcdc');
         text.textContent = str;
         svg.appendChild(text);
     });
@@ -1092,6 +1093,7 @@ Promise.all([
                 star.style.left = `${Math.floor((r.left - parentRect.left + (r.right - r.left) / 2) / parentRect.width * 1000) / 10}%`;
             }
             stars.appendChild(star);
+            path.classList.add('f', ...info.missions.filter((item) => { return 0 < item.no; }).map((item) => { return `m${item.no}`; }));
         }
         const createMission = () => { return new (customElements.get('mission-item'))(); };
         const areaInfo = new (customElements.get('area-info'))();
@@ -1130,4 +1132,26 @@ Promise.all([
         const checked = event.target.checked;
         stars.classList[checked ? 'remove' : 'add']('hidestar');
     });
+    ((select, svg) => {
+        MISSIONS.forEach((mission, index) => {
+            const option = document.createElement('option');
+            option.value = index + '';
+            if (index === 0) {
+                option.textContent = '-';
+            }
+            else {
+                option.textContent = mission;
+            }
+            select.appendChild(option);
+        });
+        select.addEventListener('change', (event) => {
+            const value = select.options[select.selectedIndex].value;
+            if (value === '0') {
+                delete svg.dataset.mission;
+            }
+            else {
+                svg.dataset.mission = value;
+            }
+        });
+    })(document.getElementById('missions'), document.getElementById('siren'));
 });
