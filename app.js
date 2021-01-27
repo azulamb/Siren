@@ -1133,17 +1133,23 @@ Promise.all([
         stars.classList[checked ? 'remove' : 'add']('hidestar');
     });
     ((select, svg) => {
-        MISSIONS.forEach((mission, index) => {
-            const option = document.createElement('option');
-            option.value = index + '';
-            if (index === 0) {
-                option.textContent = '-';
-            }
-            else {
-                option.textContent = mission;
-            }
-            select.appendChild(option);
-        });
+        ((list) => {
+            const first = [list.shift(), list.shift()];
+            list.sort();
+            list.unshift(...first);
+            list.forEach((mission) => {
+                const index = MISSIONS.indexOf(mission);
+                const option = document.createElement('option');
+                option.value = index + '';
+                if (index === 0) {
+                    option.textContent = '-';
+                }
+                else {
+                    option.textContent = mission;
+                }
+                select.appendChild(option);
+            });
+        })([...MISSIONS]);
         select.addEventListener('change', (event) => {
             const value = select.options[select.selectedIndex].value;
             if (value === '0') {

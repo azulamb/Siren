@@ -402,19 +402,26 @@ Promise.all(
 
 	( ( select, svg ) =>
 	{
-		MISSIONS.forEach( ( mission, index ) =>
+		( ( list ) =>
 		{
-			const option = document.createElement( 'option' );
-			option.value = index + '';
-			if ( index === 0 )
+			const first = <string[]>[ list.shift(), list.shift() ];
+			list.sort();
+			list.unshift( ... first );
+			list.forEach( ( mission ) =>
 			{
-				option.textContent = '-';
-			} else
-			{
-				option.textContent = mission;
-			}
-			select.appendChild( option );
-		} );
+				const index = MISSIONS.indexOf( mission );
+				const option = document.createElement( 'option' );
+				option.value = index + '';
+				if ( index === 0 )
+				{
+					option.textContent = '-';
+				} else
+				{
+					option.textContent = mission;
+				}
+				select.appendChild( option );
+			} );
+		} )( [ ... MISSIONS ] );
 
 		select.addEventListener( 'change', ( event ) =>
 		{
