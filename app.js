@@ -373,9 +373,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
             const style = document.createElement('style');
             style.innerHTML =
                 [
-                    ':host { --front-color: #dcdcdc; display: block; width: 100%; height: 1rem; line-height: 1rem; font-size: 0.8rem; }',
+                    ':host { --front-color: var( --front ); --hilight: var( --front2 ); display: block; width: 100%; height: 1rem; line-height: 1rem; font-size: 0.8rem; }',
                     ':host > div { width: 100%; height: 100%; display: grid; grid-template-columns: 1fr 3em 2.5em 1em; grid-template-rows: 1fr; padding-left: 0.5em; position: relative; box-sizing: border-box; background: linear-gradient(90deg, #1c1c38, #32505f); }',
-                    ':host > div::before { content: ""; display: block; position: absolute; left: 0; top: 0; bottom: 0; width: 0.2em; height: 80%; margin: auto; background: #f1ce24; }',
+                    ':host > div::before { content: ""; display: block; position: absolute; left: 0; top: 0; bottom: 0; width: 0.2em; height: 80%; margin: auto; background: var( --hilight ); }',
                     ':host input { color: var( --front-color ); border: 0; outline: 0; background: transparent; text-align: right; font-size: 1em; direction: rtl; }',
                     ':host line-text { width: 100%; height: 100%; --color: var( --front-color ); }',
                     ':host( [ disable ] ) { pointer-events: none; opacity: 0.5; }',
@@ -507,7 +507,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
             const style = document.createElement('style');
             style.innerHTML =
                 [
-                    ':host { --front-color: #dcdcdc; display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
+                    ':host { --front-color: var( --front ); display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
                     ':host-context( [ data-area="selected" ] ) { --selected-back: #14173e; }',
                     ':host > div { color: var( --front-color ); overflow: hidden; width: 100%; height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: var( --header-height ) 1fr; box-sizing: border-box; padding: 0 0.1rem; background: var( --selected-back ); }',
                     ':host > div > h3 { display: grid; grid-template-columns: 1.5rem 1fr; margin: 0; width: 100%; height: 100%; font-size: 1em; line-height: var( --header-height ); background: linear-gradient(90deg, #0c719c, #79b2ce); cursor: pointer; }',

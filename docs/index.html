@@ -3,22 +3,23 @@
 <head>
 <meta charset="utf-8">
 <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-<title>セイレーン作戦進捗確認ツール</title>
-<meta content="アズールレーンのセイレーン作戦における進捗管理システム" name="description">
+<title>セイレーン作戦進捗管理ツール</title>
+<meta content="アズールレーンのセイレーン作戦における進捗管理ツール" name="description">
 <meta name="keywords" content="アズールレーン,セイレーン作戦">
 <style type="text/css">
+:root { --front: #dcdcdc; --front2: #f1ce24; --back2: #14173e; --sea1: #d5e5ff; --sea2: #acf; --sea3: #80b3ff; --sea4: #59f; --lv1: var( --sea1 ); --lv2: #aaccff; --lv3: var( --sea3 ); --lv4: #5599ff; --lv5: #2a7fff; --lv6: #0066ff;--lv7: #0055d4; --lv8: #0044aa; }
 html { height: 100%; font-size: 3vmin; }
 body { height: 100%; overflow: hidden; padding: 0; margin: 0; position: relative; display: grid; justify-content: center; align-items: center; background: #214478; }
 section { overflow: hidden; width: 100vmin; height: 100vmin; }
 section > div { position: relative; }
 #map { position: relative; }
-#missions { position: absolute; left: 0; bottom: 0.3rem; background: #214478; color: #dcdcdc; border: none; outline: none; }
+#missions { position: absolute; left: 0; bottom: 0.3rem; background: #214478; color: var( --front ); border: none; outline: none; }
 #stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 #stars.hidestar { display: none; }
 #stars five-star { position: absolute; }
 svg { width: 100%; height: auto; display: block; }
-button { display: block; font-size: 1rem; cursor: pointer; outline: 0; background: #efefef; }
-.status { position: absolute; bottom: 0; right: 0.2rem; display: flex; color: #dcdcdc; }
+button { display: block; font-size: 1rem; cursor: pointer; outline: 0; background: var( --front ); }
+.status { position: absolute; bottom: 0; right: 0.2rem; display: flex; color: var( --front ); }
 .status > five-star { position: absolute; top: 0.75rem; left: -0.5rem; margin: auto; }
 .menu { position: absolute; bottom: 1.5rem; right: 0.2rem; display: flex; }
 .menu > button { --size: 1.5em; font-family: monospace; width: var( --size ); height: var( --size ); line-height: 1em; text-align: center; box-sizing: border-box; border-radius: 50%; border: solid 0.1rem #8a8a8a; margin-left: 0.2rem; padding: 0; }
@@ -37,8 +38,8 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; backgroun
 #modal > div > p { font-size: 0.6rem; margin: 0.5rem; }
 #modal[ data-type="info" ] > div.info, #modal[ data-type="config" ] > div.config { display: block; }
 #modal[ data-type="import"] > div.import { display: grid; }
-#modal button, #modal label { display: block; font-size: 1rem; cursor: pointer; outline: 0; background: #acf; text-align: center; border: none; border-radius: 0.2em; transition: background 0.5s; }
-#modal button:hover, #modal label:hover { background: #59f; }
+#modal button, #modal label { display: block; font-size: 1rem; cursor: pointer; outline: 0; background: var( --sea1 ); text-align: center; border: none; border-radius: 0.2em; transition: background 0.5s; }
+#modal button:hover, #modal label:hover { background: var( --sea4 ); }
 .link { display: inline-block; padding: 0 0.2rem; text-decoration: none; }
 .config .configitem { display: grid; grid-template-columns: 1fr 8rem; margin: 0.5rem 0; }
 #downloaduser::before { content: 'ユーザーデータのダウンロード'; display: block; }
@@ -52,9 +53,9 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; backgroun
 #downloadmap > button::before { content: 'ダウンロード'; display: inline; }
 .import { display: grid; grid-template-columns: 100%; grid-template-rows: 1.5rem 1fr 1.5rem; }
 .import table { width: 100%; }
-.import table thead tr { background: #59f; }
-.import table tbody tr:nth-child( odd ) { background: #d5e5ff; }
-.import table tbody tr:nth-child( even ) { background: #acf; }
+.import table thead tr { background: var( --sea4 ); }
+.import table tbody tr:nth-child( odd ) { background: var( --sea1 ); }
+.import table tbody tr:nth-child( even ) { background: var( --sea2 ); }
 .import table tbody td:nth-child( odd ) { background: rgba(0,0,0,0.2); }
 .import table tbody td:nth-child( even ) { background: rgba(0,0,0,0.3); }
 .import table tbody td.connect{ text-align: center; font-size: 0.5rem; }
@@ -67,7 +68,7 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; backgroun
 .sea1:hover, .sea2:hover, .sea3:hover, .sea4:hover { opacity: 1; }
 .area { pointer-events: none; opacity: 0; transition: opacity 0.5s; }
 .show { opacity: 1; }
-[ data-area="selected" ] { --hilight:#f1ce24; opacity: 1; }
+[ data-area="selected" ] { --hilight: var( --front2 ); opacity: 1; }
 svg[ data-mission ][ data-mission="1" ] .f:not( .m1 ), svg[ data-mission ][ data-mission="2" ] .f:not( .m2 ), svg[ data-mission ][ data-mission="" ] .f:not( .m ), svg[ data-mission ][ data-mission="3" ] .f:not( .m3 ), svg[ data-mission ][ data-mission="4" ] .f:not( .m4 ), svg[ data-mission ][ data-mission="5" ] .f:not( .m5 ), svg[ data-mission ][ data-mission="6" ] .f:not( .m6 ), svg[ data-mission ][ data-mission="7" ] .f:not( .m7 ), svg[ data-mission ][ data-mission="8" ] .f:not( .m8 ), svg[ data-mission ][ data-mission="9" ] .f:not( .m9 ), svg[ data-mission ][ data-mission="10" ] .f:not( .m10 ), svg[ data-mission ][ data-mission="11" ] .f:not( .m11 ) { opacity: 0.3; }
 </style>
 <script>
@@ -177,22 +178,22 @@ const SEA_AREA =
                         .azurlane.front { fill: #2ad4ff; }
                         .crimsonaxis { fill: #9a2600; }
                         .crimsonaxis.front { fill: #f55; }
-                        .sea1 { fill: var( --hilight, #d5e5ff ); }
-                        .sea2 { fill: var( --hilight, #acf ); }
-                        .sea3 { fill: var( --hilight, #80b3ff ); }
-                        .sea4 { fill: var( --hilight, #59f ); }
+                        .sea1 { fill: var( --hilight, var( --sea1 ) ); }
+                        .sea2 { fill: var( --hilight, var( --sea2 ) ); }
+                        .sea3 { fill: var( --hilight, var( --sea3 ) ); }
+                        .sea4 { fill: var( --hilight, var( --sea4 ) ); }
                         .deep.sea1 { fill: var( --hilight, #ff5555 ); }
                         .deep.sea2 { fill: var( --hilight, #e1534b ); }
                         .deep.sea3 { fill: var( --hilight, #ff9400 ); }
                         .area { fill: #ffffff;}
-                        .area[ data-lv="1" ] { fill: #d5e5ff; }
-                        .area[ data-lv="2" ] { fill: #aaccff; }
-                        .area[ data-lv="3" ] { fill: #80b3ff; }
-                        .area[ data-lv="4" ] { fill: #5599ff; }
-                        .area[ data-lv="5" ] { fill: #2a7fff; }
-                        .area[ data-lv="6" ] { fill: #0066ff; }
-                        .area[ data-lv="7" ] { fill: #0055d4; }
-                        .area[ data-lv="8" ] { fill: #0044aa; }
+                        .area[ data-lv="1" ] { fill: var( --lv1 ); }
+                        .area[ data-lv="2" ] { fill: var( --lv2 ); }
+                        .area[ data-lv="3" ] { fill: var( --lv3 ); }
+                        .area[ data-lv="4" ] { fill: var( --lv4 ); }
+                        .area[ data-lv="5" ] { fill: var( --lv5 ); }
+                        .area[ data-lv="6" ] { fill: var( --lv6 ); }
+                        .area[ data-lv="7" ] { fill: var( --lv7 ); }
+                        .area[ data-lv="8" ] { fill: var( --lv8 ); }
                         #lines { pointer-events: none; }
                         #lines > path { stroke:rgba(255,161,161,0.78); stroke-width:5; fill: transparent; }
                     </style>
@@ -809,9 +810,9 @@ window.addEventListener('DOMContentLoaded', (event) => {
             const style = document.createElement('style');
             style.innerHTML =
                 [
-                    ':host { --front-color: #dcdcdc; display: block; width: 100%; height: 1rem; line-height: 1rem; font-size: 0.8rem; }',
+                    ':host { --front-color: var( --front ); --hilight: var( --front2 ); display: block; width: 100%; height: 1rem; line-height: 1rem; font-size: 0.8rem; }',
                     ':host > div { width: 100%; height: 100%; display: grid; grid-template-columns: 1fr 3em 2.5em 1em; grid-template-rows: 1fr; padding-left: 0.5em; position: relative; box-sizing: border-box; background: linear-gradient(90deg, #1c1c38, #32505f); }',
-                    ':host > div::before { content: ""; display: block; position: absolute; left: 0; top: 0; bottom: 0; width: 0.2em; height: 80%; margin: auto; background: #f1ce24; }',
+                    ':host > div::before { content: ""; display: block; position: absolute; left: 0; top: 0; bottom: 0; width: 0.2em; height: 80%; margin: auto; background: var( --hilight ); }',
                     ':host input { color: var( --front-color ); border: 0; outline: 0; background: transparent; text-align: right; font-size: 1em; direction: rtl; }',
                     ':host line-text { width: 100%; height: 100%; --color: var( --front-color ); }',
                     ':host( [ disable ] ) { pointer-events: none; opacity: 0.5; }',
@@ -943,8 +944,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
             const style = document.createElement('style');
             style.innerHTML =
                 [
-                    ':host { --front-color: #dcdcdc; display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
-                    ':host-context( [ data-area="selected" ] ) { --selected-back: #14173e; }',
+                    ':host { --front-color: var( --front ); --back-selected: var( --back2 ) display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
+                    ':host-context( [ data-area="selected" ] ) { --selected-back: var( --back-selected ); }',
                     ':host > div { color: var( --front-color ); overflow: hidden; width: 100%; height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: var( --header-height ) 1fr; box-sizing: border-box; padding: 0 0.1rem; background: var( --selected-back ); }',
                     ':host > div > h3 { display: grid; grid-template-columns: 1.5rem 1fr; margin: 0; width: 100%; height: 100%; font-size: 1em; line-height: var( --header-height ); background: linear-gradient(90deg, #0c719c, #79b2ce); cursor: pointer; }',
                     ':host > div > h3 > line-text { --color: var( --front-color ); display: inline; }',
