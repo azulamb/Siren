@@ -38,7 +38,7 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; backgroun
 #modal > div > p { font-size: 0.6rem; margin: 0.5rem; }
 #modal[ data-type="info" ] > div.info, #modal[ data-type="config" ] > div.config { display: block; }
 #modal[ data-type="import"] > div.import { display: grid; }
-#modal button, #modal label { display: block; font-size: 1rem; cursor: pointer; outline: 0; background: var( --sea1 ); text-align: center; border: none; border-radius: 0.2em; transition: background 0.5s; }
+#modal button, #modal label { display: block; font-size: 1rem; cursor: pointer; outline: 0; background: var( --sea2 ); text-align: center; border: none; border-radius: 0.2em; transition: background 0.5s; }
 #modal button:hover, #modal label:hover { background: var( --sea4 ); }
 .link { display: inline-block; padding: 0 0.2rem; text-decoration: none; }
 .config .configitem { display: grid; grid-template-columns: 1fr 8rem; margin: 0.5rem 0; }
@@ -396,6 +396,7 @@ const SEA_AREA =
             <p>これはセイレーン作戦の進捗が分かりにくいのでマップと項目でわかりやすく管理することを目的に作られました。完全に個人用のツールですので利用は自己責任でお願いします。</p>
             <p>データの不足等ありますがご了承ください。作者(<a href="https://twitter.com/azulitenet" target=”_blank” rel=”noopener noreferrer” class="link">@azulitenet</a>)にDM等で連絡をとってもらえれば追加等できるかもしれません。(正確に作るためにスクショを送ってもらえると助かります。)</p>
             <p>数値入力は面倒かもしれませんが、入力できるところをクリックして上下キーを動かすと数値が増減し、タブ、Shiftを押しながらタブを押すことで前後の入力欄に遷移できます。これを使えばだいぶ入力は楽になるかと思います。</p>
+            <p>また、設定ボタンからユーザーデータをCSV形式でダウンロードし、表計算ソフトで入力してからインポートすることも可能です。</p>
             <h2>データの利用について</h2>
             <p>このツールは完全にHTMLファイル単体で動作するもので、データの保存もブラウザの中にしかありません。今後このツールが何かデータを収集したり外部へ送信するようなことはありません。</p>
             <h2>このツールについて</h2>
