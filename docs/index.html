@@ -7,13 +7,13 @@
 <meta content="アズールレーンのセイレーン作戦における進捗管理ツール" name="description">
 <meta name="keywords" content="アズールレーン,セイレーン作戦">
 <style type="text/css">
-:root { --front: #dcdcdc; --front2: #f1ce24; --back2: #14173e; --sea1: #d5e5ff; --sea2: #acf; --sea3: #80b3ff; --sea4: #59f; --lv1: var( --sea1 ); --lv2: #aaccff; --lv3: var( --sea3 ); --lv4: #5599ff; --lv5: #2a7fff; --lv6: #0066ff;--lv7: #0055d4; --lv8: #0044aa; }
+:root { --front: #dcdcdc; --front2: #f1ce24; --back2: #14173e; --sea0: #214478; --sea1: #d5e5ff; --sea2: #acf; --sea3: #80b3ff; --sea4: #59f; --lv1: var( --sea1 ); --lv2: #aaccff; --lv3: var( --sea3 ); --lv4: #5599ff; --lv5: #2a7fff; --lv6: #0066ff;--lv7: #0055d4; --lv8: #0044aa; }
 html { height: 100%; font-size: 3vmin; }
-body { height: 100%; overflow: hidden; padding: 0; margin: 0; position: relative; display: grid; justify-content: center; align-items: center; background: #214478; }
+body { height: 100%; overflow: hidden; padding: 0; margin: 0; position: relative; display: grid; justify-content: center; align-items: center; background: var( --sea0 ); }
 section { overflow: hidden; width: 100vmin; height: 100vmin; }
 section > div { position: relative; }
 #map { position: relative; }
-#missions { position: absolute; left: 0; bottom: 0.3rem; background: #214478; color: var( --front ); border: none; outline: none; }
+#missions { position: absolute; left: 0; bottom: 0; height: 1.4rem; background: var( --back2 ); color: var( --front ); border: none; outline: none; }
 #stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
 #stars.hidestar { display: none; }
 #stars five-star { position: absolute; }
@@ -171,7 +171,7 @@ const SEA_AREA =
             <div>
                 <svg id="siren" width="1e3" height="700" version="1.1" viewBox="0 0 1000 700" xmlns="http://www.w3.org/2000/svg">
                     <style>
-                        .sea { fill: #214478; }
+                        .sea { fill: var( --sea0 ); }
                         .siren { fill: #d54747; }
                         .ground { fill: #008000; }
                         .azurlane { fill: #007cf4; }
