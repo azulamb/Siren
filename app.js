@@ -507,8 +507,8 @@ window.addEventListener('DOMContentLoaded', (event) => {
             const style = document.createElement('style');
             style.innerHTML =
                 [
-                    ':host { --front-color: var( --front ); display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
-                    ':host-context( [ data-area="selected" ] ) { --selected-back: #14173e; }',
+                    ':host { --front-color: var( --front ); --back-selected: var( --back2 ) display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
+                    ':host-context( [ data-area="selected" ] ) { --selected-back: var( --back-selected ); }',
                     ':host > div { color: var( --front-color ); overflow: hidden; width: 100%; height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: var( --header-height ) 1fr; box-sizing: border-box; padding: 0 0.1rem; background: var( --selected-back ); }',
                     ':host > div > h3 { display: grid; grid-template-columns: 1.5rem 1fr; margin: 0; width: 100%; height: 100%; font-size: 1em; line-height: var( --header-height ); background: linear-gradient(90deg, #0c719c, #79b2ce); cursor: pointer; }',
                     ':host > div > h3 > line-text { --color: var( --front-color ); display: inline; }',
@@ -1134,29 +1134,25 @@ Promise.all([
     });
     ((select, svg) => {
         ((list) => {
-            const first = [list.shift(), list.shift()];
+            list.shift();
+            const first = list.shift();
             list.sort();
-            list.unshift(...first);
+            list.unshift(first);
             list.forEach((mission) => {
                 const index = MISSIONS.indexOf(mission);
                 const option = document.createElement('option');
                 option.value = index + '';
-                if (index === 0) {
-                    option.textContent = '-';
-                }
-                else {
-                    option.textContent = mission;
-                }
+                option.textContent = mission;
                 select.appendChild(option);
             });
         })([...MISSIONS]);
         select.addEventListener('change', (event) => {
-            const value = select.options[select.selectedIndex].value;
-            if (value === '0') {
+            const value = parseInt(select.options[select.selectedIndex].value);
+            if (value <= 1) {
                 delete svg.dataset.mission;
             }
             else {
-                svg.dataset.mission = value;
+                svg.dataset.mission = value + '';
             }
         });
     })(document.getElementById('missions'), document.getElementById('siren'));

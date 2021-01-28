@@ -404,34 +404,29 @@ Promise.all(
 	{
 		( ( list ) =>
 		{
-			const first = <string[]>[ list.shift(), list.shift() ];
+			list.shift();
+			const first = <string>list.shift();
 			list.sort();
-			list.unshift( ... first );
+			list.unshift( first );
 			list.forEach( ( mission ) =>
 			{
 				const index = MISSIONS.indexOf( mission );
 				const option = document.createElement( 'option' );
 				option.value = index + '';
-				if ( index === 0 )
-				{
-					option.textContent = '-';
-				} else
-				{
-					option.textContent = mission;
-				}
+				option.textContent = mission;
 				select.appendChild( option );
 			} );
 		} )( [ ... MISSIONS ] );
 
 		select.addEventListener( 'change', ( event ) =>
 		{
-			const value = select.options[ select.selectedIndex ].value;
-			if ( value === '0' )
+			const value = parseInt( select.options[ select.selectedIndex ].value );
+			if ( value <= 1 )
 			{
 				delete svg.dataset.mission;
 			} else
 			{
-				svg.dataset.mission = value;
+				svg.dataset.mission = value + '';
 			}
 		} );
 	} )(

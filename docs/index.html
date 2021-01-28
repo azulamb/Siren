@@ -69,7 +69,7 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; backgroun
 .area { pointer-events: none; opacity: 0; transition: opacity 0.5s; }
 .show { opacity: 1; }
 [ data-area="selected" ] { --hilight: var( --front2 ); opacity: 1; }
-svg[ data-mission ][ data-mission="1" ] .f:not( .m1 ), svg[ data-mission ][ data-mission="2" ] .f:not( .m2 ), svg[ data-mission ][ data-mission="" ] .f:not( .m ), svg[ data-mission ][ data-mission="3" ] .f:not( .m3 ), svg[ data-mission ][ data-mission="4" ] .f:not( .m4 ), svg[ data-mission ][ data-mission="5" ] .f:not( .m5 ), svg[ data-mission ][ data-mission="6" ] .f:not( .m6 ), svg[ data-mission ][ data-mission="7" ] .f:not( .m7 ), svg[ data-mission ][ data-mission="8" ] .f:not( .m8 ), svg[ data-mission ][ data-mission="9" ] .f:not( .m9 ), svg[ data-mission ][ data-mission="10" ] .f:not( .m10 ), svg[ data-mission ][ data-mission="11" ] .f:not( .m11 ) { opacity: 0.3; }
+svg[ data-mission ][ data-mission="2" ] .f:not( .m2 ), svg[ data-mission ][ data-mission="" ] .f:not( .m ), svg[ data-mission ][ data-mission="3" ] .f:not( .m3 ), svg[ data-mission ][ data-mission="4" ] .f:not( .m4 ), svg[ data-mission ][ data-mission="5" ] .f:not( .m5 ), svg[ data-mission ][ data-mission="6" ] .f:not( .m6 ), svg[ data-mission ][ data-mission="7" ] .f:not( .m7 ), svg[ data-mission ][ data-mission="8" ] .f:not( .m8 ), svg[ data-mission ][ data-mission="9" ] .f:not( .m9 ), svg[ data-mission ][ data-mission="10" ] .f:not( .m10 ), svg[ data-mission ][ data-mission="11" ] .f:not( .m11 ) { opacity: 0.3; }
 </style>
 <script>
 const MISSIONS =
@@ -1572,29 +1572,25 @@ Promise.all([
     });
     ((select, svg) => {
         ((list) => {
-            const first = [list.shift(), list.shift()];
+            list.shift();
+            const first = list.shift();
             list.sort();
-            list.unshift(...first);
+            list.unshift(first);
             list.forEach((mission) => {
                 const index = MISSIONS.indexOf(mission);
                 const option = document.createElement('option');
                 option.value = index + '';
-                if (index === 0) {
-                    option.textContent = '-';
-                }
-                else {
-                    option.textContent = mission;
-                }
+                option.textContent = mission;
                 select.appendChild(option);
             });
         })([...MISSIONS]);
         select.addEventListener('change', (event) => {
-            const value = select.options[select.selectedIndex].value;
-            if (value === '0') {
+            const value = parseInt(select.options[select.selectedIndex].value);
+            if (value <= 1) {
                 delete svg.dataset.mission;
             }
             else {
-                svg.dataset.mission = value;
+                svg.dataset.mission = value + '';
             }
         });
     })(document.getElementById('missions'), document.getElementById('siren'));
