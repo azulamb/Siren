@@ -56,6 +56,21 @@ interface ToggleButtonElement extends HTMLElement
 	checked: boolean;
 }
 
+interface TweetButtonElement extends HTMLElement
+{
+	text: string;
+	url: string;
+	hashtags(): string[];
+	hashtags( ... values: string[] ): void;
+	via: string;
+	in_reply_to: string;
+	related(): string[];
+	related( user: string ): void;
+	related( user1: string, user2: string ): void;
+	//original_referer: string; -> disable
+	//lang: string; -> default
+}
+
 interface SEA_AREA_DATA
 {
 	no: number;

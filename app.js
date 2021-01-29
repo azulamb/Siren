@@ -594,19 +594,146 @@ window.addEventListener('DOMContentLoaded', (event) => {
             this.checked = newValue !== null;
         }
     });
+    customElements.define('tweet-button', class extends HTMLElement {
+        constructor() {
+            super();
+            const shadow = this.attachShadow({ mode: 'open' });
+            const style = document.createElement('style');
+            style.innerHTML =
+                [
+                    ':host { --padding: 0rem; --color: #1da1f2; display: block; box-sizing: border-box; overflow: hidden; width: 1rem; height: 1rem; position: absolute; top: 0.1rem; right: 0.1rem; }',
+                    ':host( :hover ) { --color: #1a91da; }',
+                    ':host( [ disable ] ) > a { user-select: none; pointer: cursor; }',
+                    ':host > a { display: flex; justify-content: center; align-items: center; box-sizing: border-box; text-decoration: none; color: inherit; width: 100%; height: 100%; padding: var( --padding ); }',
+                    'svg{ width: auto; height: 1rem; }',
+                ].join('');
+            this.link = document.createElement('a');
+            if (this.hasAttribute('target')) {
+                this.link.target = this.getAttribute('target') || '';
+            }
+            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            path.setAttributeNS(null, 'd', 'M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z');
+            path.style.fill = 'var( --color )';
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttributeNS(null, 'width', '24px');
+            svg.setAttributeNS(null, 'height', '24px');
+            svg.setAttributeNS(null, 'viewBox', '0 0 24 24');
+            svg.appendChild(path);
+            this.link.appendChild(svg);
+            this.link.target = '_blank';
+            this.link.rel = 'noopener noreferrer';
+            this.update();
+            shadow.appendChild(style);
+            shadow.appendChild(this.link);
+        }
+        update() {
+            const params = new URLSearchParams();
+            if (this.text) {
+                params.append('text', this.text);
+            }
+            if (this.url) {
+                params.append('url', this.url);
+            }
+            const hashtags = this.hashtags();
+            if (0 < hashtags.length) {
+                params.append('hashtags', hashtags.join(','));
+            }
+            if (this.via) {
+                params.append('via', this.via);
+            }
+            if (this.in_reply_to) {
+                params.append('in_reply_to', this.in_reply_to);
+            }
+            const related = this.related();
+            if (0 < related.length) {
+                params.append('related', related.join(','));
+            }
+            if (this.lang) {
+                params.append('lang', this.lang);
+            }
+            const url = new URL('https://twitter.com/intent/tweet');
+            url.search = params.toString();
+            this.link.href = url.toString();
+        }
+        twitterArray(data) {
+            return data.split(',').filter((v) => { return !!v; });
+        }
+        get text() { return this.getAttribute('text') || ''; }
+        set text(value) { this.setAttribute('text', value || ''); this.update(); }
+        get url() { return this.getAttribute('url') || ''; }
+        set url(value) { this.setAttribute('url', value || ''); this.update(); }
+        hashtags(...values) {
+            if (values.length === 0) {
+                return this.twitterArray(this.getAttribute('hashtags') || '');
+            }
+            this.setAttribute('hashtags', values.join(','));
+            this.update();
+        }
+        get via() { return this.getAttribute('via') || ''; }
+        set via(value) { this.setAttribute('via', (value || '').replace(/^\@+/, '')); this.update(); }
+        get in_reply_to() { return this.getAttribute('in_reply_to') || ''; }
+        set in_reply_to(value) {
+            try {
+                this.setAttribute('in_reply_to', new URL(value).pathname.replace(/^.+\/([0-9]+)$/, '$1'));
+            }
+            catch (error) {
+                this.setAttribute('in_reply_to', (value || '').replace(/[^0-9]+/g, ''));
+            }
+            this.update();
+        }
+        related(user1, user2) {
+            if (user1 === undefined) {
+                return this.twitterArray(this.getAttribute('related') || '');
+            }
+            const users = [];
+            if (user1) {
+                users.push(user1.replace(/^\@+/, ''));
+            }
+            if (user2) {
+                users.push(user2.replace(/^\@+/, ''));
+            }
+            this.setAttribute('related', users.join(','));
+            this.update();
+        }
+        static get observedAttributes() { return ['lang']; }
+        attributeChangedCallback(attrName, oldVal, newVal) {
+            if (oldVal === newVal) {
+                return;
+            }
+            this.update();
+        }
+    });
 });
 class URLData {
-    constructor() { }
+    constructor() {
+        this.table = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+    }
     static parse() {
         const data = new URLData();
         return data.decode();
+    }
+    toNum(num) {
+        return num.split('').reverse().reduce((total, now, index) => {
+            return total + this.table.indexOf(now) * Math.pow(this.table.length, index);
+        }, 0);
+    }
+    toStr(num) {
+        const list = [];
+        while (0 < num) {
+            list.unshift(this.table[num % this.table.length]);
+            num = Math.floor(num / this.table.length);
+        }
+        if (list.length <= 0) {
+            list.push(this.table[0]);
+        }
+        return list.join('');
     }
     decode(p) {
         const q = ((params) => {
             return params.get('q') || '';
         })(new URLSearchParams(p || location.search));
         const params = {};
-        if (!q || q.match(/[^\!\.0-9a-fA-F]/)) {
+        if (!q || q.match(/[^\!\.0-9a-zA-Z]/)) {
             return params;
         }
         q.split('!').forEach((area) => {
@@ -615,13 +742,13 @@ class URLData {
             if (!key) {
                 return;
             }
-            params[`sa${parseInt(key, 16)}`] = { m: data.map((i) => { return parseInt(i, 16); }) };
+            params[`sa${this.toNum(key)}`] = { m: data.map((i) => { return this.toNum(i); }) };
         });
         return params;
     }
     encode(userdata) {
         const data = userdata.export();
-        return 'q=' + Object.keys(data).map((key) => {
+        return Object.keys(data).map((key) => {
             const area = data[key];
             return Object.assign({ id: parseInt(key.replace(/[^0-9]/g, '')) }, area);
         }).filter((data) => {
@@ -634,7 +761,7 @@ class URLData {
                 }
                 list.pop();
             }
-            return `${data.id.toString(16)}.${list.map((i) => { return i.toString(16); }).join('.')}`;
+            return `${this.toStr(data.id)}.${list.map((i) => { return this.toStr(i); }).join('.')}`;
         }).join('!');
     }
 }
@@ -707,6 +834,14 @@ class UserData {
         });
     }
     export() { return JSON.parse(JSON.stringify(this.data)); }
+    toURL() {
+        const url = new URL(location.href.split('?')[0]);
+        const data = new URLData().encode(this);
+        if (data) {
+            url.searchParams.set('q', data);
+        }
+        return url.toString();
+    }
 }
 UserData.MISSION = 5;
 class MyDate {
@@ -901,6 +1036,7 @@ Promise.all([
     customElements.whenDefined('mission-item'),
     customElements.whenDefined('area-info'),
     customElements.whenDefined('toggle-button'),
+    customElements.whenDefined('tweet-button'),
 ]).then(() => {
     return new Promise((resolve) => { setTimeout(resolve, 50); });
 }).then(() => {
@@ -1019,7 +1155,7 @@ Promise.all([
             return complete;
         })(document.body.querySelectorAll('area-info'));
     };
-    const UpdateComplete = ((target) => {
+    const UpdateComplete = ((target, tweet) => {
         let timer = 0;
         return () => {
             if (timer) {
@@ -1027,10 +1163,11 @@ Promise.all([
             }
             timer = setTimeout(() => {
                 target.textContent = (CountComplete() + '').padStart(3, '0');
+                tweet.url = user.toURL();
                 timer = 0;
             }, 500);
         };
-    })(document.getElementById('getstar'));
+    })(document.getElementById('getstar'), document.getElementById('tweet'));
     ((funcs) => {
         document.querySelectorAll('.configitem').forEach((item) => {
             const button = item.children[0];

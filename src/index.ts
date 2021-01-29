@@ -18,6 +18,7 @@ Promise.all(
 	customElements.whenDefined( 'mission-item' ),
 	customElements.whenDefined( 'area-info' ),
 	customElements.whenDefined( 'toggle-button' ),
+	customElements.whenDefined( 'tweet-button' ),
 ] ).then( () =>
 {
 	return new Promise( ( resolve ) => { setTimeout( resolve, 50 ); } );
@@ -187,7 +188,7 @@ Promise.all(
 		} )( <NodeListOf<AreaInfoElement>>document.body.querySelectorAll( 'area-info' ) );
 	};
 
-	const UpdateComplete = ( ( target ) =>
+	const UpdateComplete = ( ( target, tweet ) =>
 	{
 		let timer = 0;
 		return () =>
@@ -196,10 +197,11 @@ Promise.all(
 			timer = setTimeout( () =>
 			{
 				target.textContent = ( CountComplete() + '' ).padStart( 3, '0' );
+				tweet.url = user.toURL();
 				timer = 0;
 			}, 500 );
 		};
-	} )( <HTMLElement>document.getElementById( 'getstar' ) );
+	} )( <HTMLElement>document.getElementById( 'getstar' ), <TweetButtonElement>document.getElementById( 'tweet' ) );
 
 	( ( funcs: { [ keys: string ]: () => any } ) =>
 	{

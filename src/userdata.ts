@@ -93,4 +93,15 @@ class UserData
 	}
 
 	public export() { return <{ [ keys: string ]: { m: number[]; } }>JSON.parse( JSON.stringify( this.data ) ); }
+
+	public toURL()
+	{
+		const url = new URL( location.href.split( '?' )[ 0 ] );
+		const data = new URLData().encode( this );
+		if ( data )
+		{
+			url.searchParams.set( 'q', data );
+		}
+		return url.toString();
+	}
 }

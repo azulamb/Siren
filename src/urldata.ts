@@ -2,12 +2,35 @@ interface USER_AREA_DATA { [ keys: string ]: { m: number[]; } }
 
 class URLData
 {
+	private table = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'.split( '' );
 	constructor(){}
 
 	static parse()
 	{
 		const data = new URLData();
 		return data.decode();
+	}
+
+	private toNum( num: string )
+	{
+		return num.split( '' ).reverse().reduce( ( total, now, index ) =>
+		{
+			return total + this.table.indexOf( now ) * Math.pow( this.table.length, index );
+		}, 0 )
+	}
+
+	private toStr( num: number )
+	{
+		const list = [];
+
+		while ( 0 < num )
+		{
+			list.unshift( this.table[ num % this.table.length ] );
+			num = Math.floor( num / this.table.length );
+		}
+		if ( list.length <= 0 ) { list.push( this.table[ 0 ] ); }
+
+		return list.join( '' );
 	}
 
 	public decode( p?: string )
@@ -19,14 +42,14 @@ class URLData
 
 		const params: USER_AREA_DATA = {};
 
-		if ( !q || q.match( /[^\!\.0-9a-fA-F]/ ) ) { return params; }
+		if ( !q || q.match( /[^\!\.0-9a-zA-Z]/ ) ) { return params; }
 
 		q.split( '!' ).forEach( ( area ) =>
 		{
 			const data = area.split( '.' );
 			const key = data.shift();
 			if ( !key ) { return; }
-			params[ `sa${ parseInt( key, 16 ) }` ] = { m: data.map( ( i ) => { return parseInt( i, 16 ); } ) };
+			params[ `sa${ this.toNum( key ) }` ] = { m: data.map( ( i ) => { return this.toNum( i ); } ) };
 		} );
 
 		return params;
@@ -35,7 +58,7 @@ class URLData
 	public encode( userdata: UserData )
 	{
 		const data = userdata.export();
-		return 'q=' + Object.keys( data ).map( ( key ) =>
+		return Object.keys( data ).map( ( key ) =>
 		{
 			const area = data[ key ];
 			return Object.assign( { id: parseInt( key.replace( /[^0-9]/g, '' ) ) }, area );
@@ -50,7 +73,7 @@ class URLData
 				if ( list[ i ] ) { break; }
 				list.pop();
 			}
-			return `${ data.id.toString( 16 ) }.${ list.map( ( i ) => { return i.toString( 16 ); } ).join( '.' ) }`;
+			return `${ this.toStr( data.id ) }.${ list.map( ( i ) => { return this.toStr( i ); } ).join( '.' ) }`;
 		} ).join( '!' );
 	}
 }
