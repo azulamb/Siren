@@ -733,10 +733,10 @@ class URLData {
             return params.get('q') || '';
         })(new URLSearchParams(p || location.search));
         const params = {};
-        if (!q || q.match(/[^\!\.0-9a-zA-Z]/)) {
+        if (!q || q.match(/[^\_\.0-9a-zA-Z]/)) {
             return params;
         }
-        q.split('!').forEach((area) => {
+        q.split('_').forEach((area) => {
             const data = area.split('.');
             const key = data.shift();
             if (!key) {
@@ -762,7 +762,7 @@ class URLData {
                 list.pop();
             }
             return `${this.toStr(data.id)}.${list.map((i) => { return this.toStr(i); }).join('.')}`;
-        }).join('!');
+        }).join('_');
     }
 }
 class UserData {

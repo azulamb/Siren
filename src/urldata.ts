@@ -42,9 +42,9 @@ class URLData
 
 		const params: USER_AREA_DATA = {};
 
-		if ( !q || q.match( /[^\!\.0-9a-zA-Z]/ ) ) { return params; }
+		if ( !q || q.match( /[^\_\.0-9a-zA-Z]/ ) ) { return params; }
 
-		q.split( '!' ).forEach( ( area ) =>
+		q.split( '_' ).forEach( ( area ) =>
 		{
 			const data = area.split( '.' );
 			const key = data.shift();
@@ -74,6 +74,6 @@ class URLData
 				list.pop();
 			}
 			return `${ this.toStr( data.id ) }.${ list.map( ( i ) => { return this.toStr( i ); } ).join( '.' ) }`;
-		} ).join( '!' );
+		} ).join( '_' );
 	}
 }
