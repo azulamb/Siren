@@ -11,6 +11,8 @@
 html { height: 100%; font-size: 3vmin; }
 body { height: 100%; overflow: hidden; padding: 0; margin: 0; position: relative; display: grid; justify-content: center; align-items: center; background: var( --sea0 ); }
 body.readonly tweet-button { display: none; }
+#readonly { display: none; position:absolute; height: 3rem; line-height: 1.5rem; width: 100%; top: 0; bottom: 0; margin: auto; text-align: center; color: var( --front ); background: rgba( 0, 0, 0, 0.7 ); pointer-events: none; opacity: 1; transition: opacity 3s 5s; }
+body.readonly #readonly { display: block; }
 section { overflow: hidden; width: 100vmin; height: 100vmin; }
 section > div { position: relative; }
 #map { position: relative; }
@@ -437,6 +439,7 @@ const SEA_AREA =
             <button id="import"></button>
         </div>
     </modal-dialog>
+    <div id="readonly">現在読み込み専用モードです<br>利用したい場合はリロードしてください</div>
     <script>
 const Anime = ((getLists) => {
     return (svg) => {
@@ -1547,6 +1550,12 @@ Promise.all([
         }
         user.import(data);
         document.body.classList.add('readonly');
+        const readonly = document.getElementById('readonly');
+        readonly.style.display = 'block';
+        setTimeout(() => {
+            readonly.style.opacity = '0';
+            history.replaceState('', '', './');
+        }, 0);
     })(URLData.parse());
     document.getElementById('importcsv').addEventListener('change', (event) => {
         const files = event.target.files;

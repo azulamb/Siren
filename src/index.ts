@@ -125,6 +125,13 @@ Promise.all(
 		if ( Object.keys( data ).length <= 0 ) { return; }
 		user.import( data );
 		document.body.classList.add( 'readonly' );
+		const readonly = (<HTMLElement>document.getElementById( 'readonly' ));
+		readonly.style.display = 'block';
+		setTimeout( () =>
+		{
+			readonly.style.opacity = '0';
+			history.replaceState( '', '', './' );
+		}, 0 );
 	} )( URLData.parse() );
 
 	(<HTMLInputElement>document.getElementById( 'importcsv' )).addEventListener( 'change', ( event ) =>

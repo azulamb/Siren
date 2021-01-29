@@ -507,7 +507,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
             const style = document.createElement('style');
             style.innerHTML =
                 [
-                    ':host { --front-color: var( --front ); --back-selected: var( --back2 ) display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
+                    ':host { --front-color: var( --front ); --back-selected: var( --back2 ); display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
                     ':host-context( [ data-area="selected" ] ) { --selected-back: var( --back-selected ); }',
                     ':host > div { color: var( --front-color ); overflow: hidden; width: 100%; height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: var( --header-height ) 1fr; box-sizing: border-box; padding: 0 0.1rem; background: var( --selected-back ); }',
                     ':host > div > h3 { display: grid; grid-template-columns: 1.5rem 1fr; margin: 0; width: 100%; height: 100%; font-size: 1em; line-height: var( --header-height ); background: linear-gradient(90deg, #0c719c, #79b2ce); cursor: pointer; }',
@@ -1107,6 +1107,12 @@ Promise.all([
         }
         user.import(data);
         document.body.classList.add('readonly');
+        const readonly = document.getElementById('readonly');
+        readonly.style.display = 'block';
+        setTimeout(() => {
+            readonly.style.opacity = '0';
+            history.replaceState('', '', './');
+        }, 0);
     })(URLData.parse());
     document.getElementById('importcsv').addEventListener('change', (event) => {
         const files = event.target.files;
