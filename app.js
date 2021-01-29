@@ -595,12 +595,61 @@ window.addEventListener('DOMContentLoaded', (event) => {
         }
     });
 });
+class URLData {
+    constructor() { }
+    static parse() {
+        const data = new URLData();
+        return data.decode();
+    }
+    decode(p) {
+        const q = ((params) => {
+            return params.get('q') || '';
+        })(new URLSearchParams(p || location.search));
+        const params = {};
+        if (!q || q.match(/[^\!\.0-9a-fA-F]/)) {
+            return params;
+        }
+        q.split('!').forEach((area) => {
+            const data = area.split('.');
+            const key = data.shift();
+            if (!key) {
+                return;
+            }
+            params[`sa${parseInt(key, 16)}`] = { m: data.map((i) => { return parseInt(i, 16); }) };
+        });
+        return params;
+    }
+    encode(userdata) {
+        const data = userdata.export();
+        return 'q=' + Object.keys(data).map((key) => {
+            const area = data[key];
+            return Object.assign({ id: parseInt(key.replace(/[^0-9]/g, '')) }, area);
+        }).filter((data) => {
+            return data.m[0] + data.m[1] + data.m[2] + data.m[3] + data.m[4];
+        }).map((data) => {
+            const list = [...data.m];
+            for (let i = 4; 0 <= i; --i) {
+                if (list[i]) {
+                    break;
+                }
+                list.pop();
+            }
+            return `${data.id.toString(16)}.${list.map((i) => { return i.toString(16); }).join('.')}`;
+        }).join('!');
+    }
+}
 class UserData {
     constructor() {
+        this.lock = false;
         this.data =
             {};
     }
-    _get(key) { return localStorage.getItem(key) || ''; }
+    _get(key) {
+        if (this.lock) {
+            return '';
+        }
+        return localStorage.getItem(key) || '';
+    }
     getMission(id, mission) {
         if (!this.data[`sa${id}`]) {
             return 0;
@@ -608,6 +657,9 @@ class UserData {
         return this.data[`sa${id}`].m[mission] || 0;
     }
     async _set(key, value) {
+        if (this.lock) {
+            return;
+        }
         localStorage.setItem(key, value);
     }
     setMission(id, mission, value) {
@@ -640,9 +692,20 @@ class UserData {
         });
     }
     async clear() {
+        if (this.lock) {
+            return;
+        }
         localStorage.clear();
     }
-    import() { }
+    import(data, lock = false) {
+        this.lock = true;
+        Object.keys(this.data).forEach((key) => {
+            this.data[key] = { m: [] };
+            for (let i = 0; i < UserData.MISSION; ++i) {
+                this.data[key].m[i] = (data[key] ? data[key].m[i] : 0) || 0;
+            }
+        });
+    }
     export() { return JSON.parse(JSON.stringify(this.data)); }
 }
 UserData.MISSION = 5;
@@ -902,6 +965,13 @@ Promise.all([
             modal.show();
         }).catch((error) => { console.error(error); });
     };
+    ((data) => {
+        if (Object.keys(data).length <= 0) {
+            return;
+        }
+        user.import(data);
+        document.body.classList.add('readonly');
+    })(URLData.parse());
     document.getElementById('importcsv').addEventListener('change', (event) => {
         const files = event.target.files;
         if (!files || !files[0]) {

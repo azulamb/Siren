@@ -119,6 +119,13 @@ Promise.all(
 		} ).catch( ( error ) => { console.error( error ); } );
 	};
 
+	( ( data ) =>
+	{
+		if ( Object.keys( data ).length <= 0 ) { return; }
+		user.import( data );
+		document.body.classList.add( 'readonly' );
+	} )( URLData.parse() );
+
 	(<HTMLInputElement>document.getElementById( 'importcsv' )).addEventListener( 'change', ( event ) =>
 	{
 		const files = (<HTMLInputElement>event.target).files;

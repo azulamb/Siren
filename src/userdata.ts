@@ -1,10 +1,13 @@
+/// <reference path="./urldata.ts" />
+
 declare const MISSIONS: string[];
 declare const SEA_AREA: { [ keys: string ]: SEA_AREA_DATA };
 
 class UserData
 {
 	static MISSION: number = 5;
-	private data: { [ keys: string ]: { m: number[]; } };
+	private data: USER_AREA_DATA;
+	private lock = false;
 
 	constructor()
 	{
@@ -19,8 +22,11 @@ class UserData
 		};
 	}
 
-	private _get( key: string ) { return localStorage.getItem( key ) || ''; }
-
+	private _get( key: string )
+	{
+		if ( this.lock ) { return ''; }
+		return localStorage.getItem( key ) || '';
+	}
 
 	public getMission( id: number, mission: number )
 	{
@@ -30,6 +36,7 @@ class UserData
 
 	private async _set( key: string, value: string )
 	{
+		if ( this.lock ) { return; }
 		localStorage.setItem( key, value );
 	}
 
@@ -68,10 +75,22 @@ class UserData
 
 	public async clear()
 	{
+		if ( this.lock ) { return; }
 		localStorage.clear();
 	}
 
-	import(){}
+	public import( data: USER_AREA_DATA, lock: boolean = false )
+	{
+		this.lock = true;
+		Object.keys( this.data ).forEach( ( key ) =>
+		{
+			this.data[ key ] = { m: [] };
+			for ( let i = 0 ; i < UserData.MISSION ; ++i )
+			{
+				this.data[ key ].m[ i ] = ( data[ key ] ? data[ key ].m[ i ] : 0 ) || 0;
+			}
+		} );
+	}
 
-	export() { return JSON.parse( JSON.stringify( this.data ) ); }
+	public export() { return <{ [ keys: string ]: { m: number[]; } }>JSON.parse( JSON.stringify( this.data ) ); }
 }

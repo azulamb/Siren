@@ -98,7 +98,7 @@ const SEA_AREA =
     sa23: { no: 23, lv: 2, title: 'NA海域南西C', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 5, max: 18 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa24: { no: 24, lv: 2, title: 'NA海域南西D', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 4, max: 3 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa25: { no: 25, lv: 3, title: 'NA海域南西E', missions: [ { no: 1, max: 1 }, { no: 2, max: 5 }, { no: 4, max: 60 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
-    sa31: { no: 31, lv: 2, title: '南西海嶺A', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 4, max: 36 }, { no: 0, max: 0 }, { no: 7, max: 1 } ] },
+    sa31: { no: 31, lv: 2, title: '南西海嶺A', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 4, max: 36 }, { no: 6, max: 1 }, { no: 7, max: 1 } ] },
     sa32: { no: 32, lv: 3, title: '南西海嶺B', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 3, max: 6 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa33: { no: 33, lv: 3, title: '南西海嶺C', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 4, max: 60 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa34: { no: 34, lv: 3, title: '南西海嶺D', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 2, max: 10 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
@@ -945,7 +945,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
             const style = document.createElement('style');
             style.innerHTML =
                 [
-                    ':host { --front-color: var( --front ); --back-selected: var( --back2 ); display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
+                    ':host { --front-color: var( --front ); --back-selected: var( --back2 ) display: block; width: var(--item-width); height: 100%; --header-height: 1.5rem; --selected-back: transparent; }',
                     ':host-context( [ data-area="selected" ] ) { --selected-back: var( --back-selected ); }',
                     ':host > div { color: var( --front-color ); overflow: hidden; width: 100%; height: 100%; display: grid; grid-template-columns: 1fr; grid-template-rows: var( --header-height ) 1fr; box-sizing: border-box; padding: 0 0.1rem; background: var( --selected-back ); }',
                     ':host > div > h3 { display: grid; grid-template-columns: 1.5rem 1fr; margin: 0; width: 100%; height: 100%; font-size: 1em; line-height: var( --header-height ); background: linear-gradient(90deg, #0c719c, #79b2ce); cursor: pointer; }',
@@ -1033,12 +1033,61 @@ window.addEventListener('DOMContentLoaded', (event) => {
         }
     });
 });
+class URLData {
+    constructor() { }
+    static parse() {
+        const data = new URLData();
+        return data.decode();
+    }
+    decode(p) {
+        const q = ((params) => {
+            return params.get('q') || '';
+        })(new URLSearchParams(p || location.search));
+        const params = {};
+        if (!q || q.match(/[^\!\.0-9a-fA-F]/)) {
+            return params;
+        }
+        q.split('!').forEach((area) => {
+            const data = area.split('.');
+            const key = data.shift();
+            if (!key) {
+                return;
+            }
+            params[`sa${parseInt(key, 16)}`] = { m: data.map((i) => { return parseInt(i, 16); }) };
+        });
+        return params;
+    }
+    encode(userdata) {
+        const data = userdata.export();
+        return 'q=' + Object.keys(data).map((key) => {
+            const area = data[key];
+            return Object.assign({ id: parseInt(key.replace(/[^0-9]/g, '')) }, area);
+        }).filter((data) => {
+            return data.m[0] + data.m[1] + data.m[2] + data.m[3] + data.m[4];
+        }).map((data) => {
+            const list = [...data.m];
+            for (let i = 4; 0 <= i; --i) {
+                if (list[i]) {
+                    break;
+                }
+                list.pop();
+            }
+            return `${data.id.toString(16)}.${list.map((i) => { return i.toString(16); }).join('.')}`;
+        }).join('!');
+    }
+}
 class UserData {
     constructor() {
+        this.lock = false;
         this.data =
             {};
     }
-    _get(key) { return localStorage.getItem(key) || ''; }
+    _get(key) {
+        if (this.lock) {
+            return '';
+        }
+        return localStorage.getItem(key) || '';
+    }
     getMission(id, mission) {
         if (!this.data[`sa${id}`]) {
             return 0;
@@ -1046,6 +1095,9 @@ class UserData {
         return this.data[`sa${id}`].m[mission] || 0;
     }
     async _set(key, value) {
+        if (this.lock) {
+            return;
+        }
         localStorage.setItem(key, value);
     }
     setMission(id, mission, value) {
@@ -1078,9 +1130,20 @@ class UserData {
         });
     }
     async clear() {
+        if (this.lock) {
+            return;
+        }
         localStorage.clear();
     }
-    import() { }
+    import(data, lock = false) {
+        this.lock = true;
+        Object.keys(this.data).forEach((key) => {
+            this.data[key] = { m: [] };
+            for (let i = 0; i < UserData.MISSION; ++i) {
+                this.data[key].m[i] = (data[key] ? data[key].m[i] : 0) || 0;
+            }
+        });
+    }
     export() { return JSON.parse(JSON.stringify(this.data)); }
 }
 UserData.MISSION = 5;
@@ -1340,6 +1403,13 @@ Promise.all([
             modal.show();
         }).catch((error) => { console.error(error); });
     };
+    ((data) => {
+        if (Object.keys(data).length <= 0) {
+            return;
+        }
+        user.import(data);
+        document.body.classList.add('readonly');
+    })(URLData.parse());
     document.getElementById('importcsv').addEventListener('change', (event) => {
         const files = event.target.files;
         if (!files || !files[0]) {
