@@ -7,6 +7,10 @@
 
 const user = new UserData();
 
+declare const CNUM: string[];
+declare const RNUM: string[];
+declare const RECORDS: (string[])[];
+
 Promise.all(
 [
 	user.load(),
@@ -345,6 +349,7 @@ Promise.all(
 		const path: SVGPathElement = <any>document.getElementById( `sa${ areaId }` );
 
 		const star = new ( customElements.get( 'five-star' ) )();
+		star.id = `star${ areaId}`;
 
 		if ( path )
 		{
@@ -410,13 +415,20 @@ Promise.all(
 		if ( areaId === urlParams.area ) { setTimeout( selected, 4000 ); }
 	} );
 
-	(<ToggleButtonElement>document.getElementById( 'showstar' )).addEventListener( 'change', ( event ) =>
+	const showstar = (<ToggleButtonElement>document.getElementById( 'showstar' ));
+	showstar.addEventListener( 'change', ( event ) =>
 	{
 		const checked = (<ToggleButtonElement>event.target).checked;
-		stars.classList[ checked ? 'remove' : 'add' ]( 'hidestar' );
+		stars.classList[ checked ? 'remove' : 'add' ]( 'hide' );
 	} );
 
-	( ( select, svg ) =>
+	const reset =
+	{
+		missions: () => {},
+		records: () => {},
+	};
+
+	( ( select ) =>
 	{
 		( ( list ) =>
 		{
@@ -434,6 +446,12 @@ Promise.all(
 			} );
 		} )( [ ... MISSIONS ] );
 
+		reset.missions = () =>
+		{
+			select.options[ 0 ].selected = true;
+			delete svg.dataset.mission;
+		};
+
 		select.addEventListener( 'change', ( event ) =>
 		{
 			const value = parseInt( select.options[ select.selectedIndex ].value );
@@ -443,10 +461,64 @@ Promise.all(
 			} else
 			{
 				svg.dataset.mission = value + '';
+				reset.records();
 			}
 		} );
 	} )(
-		<HTMLSelectElement>document.getElementById( 'missions' ),
-		<HTMLSelectElement>document.getElementById( 'siren' )
+		<HTMLSelectElement>document.getElementById( 'missions' )
 	);
+
+	( ( list: (SVGPathElement[])[], select, recordsinfo ) =>
+	{
+		const option = document.createElement( 'option' );
+		option.textContent = '記録';
+		option.value = '0';
+		select.appendChild( option );
+		list.forEach( ( records, num ) =>
+		{
+			if ( records.length <= 0 ) { return; }
+			const option = document.createElement( 'option' );
+			option.textContent = CNUM[ num ];
+			option.value = ( num + 1 ) + '';
+			select.appendChild( option );
+			records.forEach( ( area, volume ) =>
+			{
+				area.dataset.record = ( num + 1 ) + '';
+				area.dataset.volume = volume + '';
+				const star = <HTMLElement>document.getElementById( `star${ area.id.replace( /[^0-9]+/g, '' ) }` );
+				const info = document.createElement( 'div' );
+				info.style.top = star.style.top;
+				info.style.left = star.style.left;
+				info.textContent = `${ CNUM[ num ] }-${ RNUM[ volume ] }`;
+				recordsinfo.appendChild( info );
+			} );
+		} );
+
+		reset.records = () =>
+		{
+			select.options[ 0 ].selected = true;
+			recordsinfo.classList.add( 'hide' );
+			delete svg.dataset.records;
+		};
+
+		select.addEventListener( 'change', () =>
+		{
+			const value = parseInt( select.options[ select.selectedIndex ].value );
+			if ( value <= 0 )
+			{
+				delete svg.dataset.records;
+				showstar.checked = true;
+				recordsinfo.classList.add( 'hide' );
+			} else
+			{
+				svg.dataset.records = value + '';
+				showstar.checked = false;
+				recordsinfo.classList.remove( 'hide' );
+				reset.missions();
+			}
+		} );
+	} )( RECORDS.map( ( records ) =>
+	{
+		return records.map( ( id ) => { return <any>document.getElementById( id ); } );
+	} ), <HTMLSelectElement>document.getElementById( 'records' ), <HTMLElement>document.getElementById( 'recordsinfo' ) );
 } );

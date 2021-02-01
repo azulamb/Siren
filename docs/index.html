@@ -16,10 +16,12 @@ body.readonly #readonly { display: block; }
 section { overflow: hidden; width: 100vmin; height: 100vmin; }
 section > div { position: relative; }
 #map { position: relative; }
-#missions { position: absolute; left: 0; bottom: 0; height: 1.4rem; background: var( --back2 ); color: var( --front ); border: none; outline: none; }
-#stars { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
-#stars.hidestar { display: none; }
+.filter { position: absolute; left: 0; bottom: 0; display: flex; }
+.filter select {height: 1.4rem; background: var( --back2 ); color: var( --front ); border: none; outline: none; }
+#stars, #recordsinfo { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; }
+#stars.hide, #recordsinfo.hide { display: none; }
 #stars five-star { position: absolute; }
+#recordsinfo > div { position: absolute; font-size: 0.5rem; margin: -0.5em 0 0 -1em; }
 svg { width: 100%; height: auto; display: block; }
 button { display: block; font-size: 1rem; cursor: pointer; outline: 0; background: var( --front ); }
 .status { position: absolute; bottom: 0; right: 0.2rem; display: flex; color: var( --front ); }
@@ -32,7 +34,7 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; backgroun
 .info p span + span { margin-left: 0.3rem; }
 .starconf > five-star { position: absolute; left: -0.8rem; top: 0.75rem; --size: 1.5rem; }
 #showstar { display: block; }
-.hidestar > five-star { display: none; }
+.hide > five-star { display: none; }
 .side { width: 100vmin; height: 30vmin; overflow: hidden; }
 #list { width: 100%; height: 100%; --item-width: 10rem; }
 #loading.hide { opacity: 0; pointer-events: none; }
@@ -73,6 +75,7 @@ button { display: block; font-size: 1rem; cursor: pointer; outline: 0; backgroun
 .show { opacity: 1; }
 [ data-area="selected" ] { --hilight: var( --front2 ); opacity: 1; }
 svg[ data-mission ][ data-mission="2" ] .f:not( .m2 ), svg[ data-mission ][ data-mission="" ] .f:not( .m ), svg[ data-mission ][ data-mission="3" ] .f:not( .m3 ), svg[ data-mission ][ data-mission="4" ] .f:not( .m4 ), svg[ data-mission ][ data-mission="5" ] .f:not( .m5 ), svg[ data-mission ][ data-mission="6" ] .f:not( .m6 ), svg[ data-mission ][ data-mission="7" ] .f:not( .m7 ), svg[ data-mission ][ data-mission="8" ] .f:not( .m8 ), svg[ data-mission ][ data-mission="9" ] .f:not( .m9 ), svg[ data-mission ][ data-mission="10" ] .f:not( .m10 ), svg[ data-mission ][ data-mission="11" ] .f:not( .m11 ) { opacity: 0.3; }
+svg[ data-records ][ data-records="1" ] .f:not( [ data-record="1" ] ), svg[ data-records ][ data-records="2" ] .f:not( [ data-record="2" ] ), svg[ data-records ][ data-records="3" ] .f:not( [ data-record="3" ] ), svg[ data-records ][ data-records="4" ] .f:not( [ data-record="4" ] ), svg[ data-records ][ data-records="5" ] .f:not( [ data-record="5" ] ), svg[ data-records ][ data-records="6" ] .f:not( [ data-record="6" ] ), svg[ data-records ][ data-records="7" ] .f:not( [ data-record="7" ] ), svg[ data-records ][ data-records="8" ] .f:not( [ data-record="8" ] ), svg[ data-records ][ data-records="9" ] .f:not( [ data-record="9" ] ), svg[ data-records ][ data-records="10" ] .f:not( [ data-record="10" ] ), svg[ data-records ][ data-records="11" ] .f:not( [ data-record="11" ] ), svg[ data-records ][ data-records="12" ] .f:not( [ data-record="12" ] ) { opacity: 0.3; }
 </style>
 <script>
 const MISSIONS =
@@ -89,6 +92,24 @@ const MISSIONS =
     '強化型艦隊の待ち伏せを撃退',
     'オフニャサルベージを行う',
     '強化型艦隊が落とした資源を回収',
+    '謎の商人と遭遇する',
+];
+const CNUM = [ ... '①②③④⑤⑥⑦⑧⑨⑩⑪⑫' ];
+const RNUM = [ ... 'ⅠⅡⅢⅣⅤⅥⅦ' ];
+const RECORDS =
+[
+    [ 'sa44', 'sa84', 'sa125', 'sa95', 'sa104', 'sa52' ],
+    [ 'sa22', 'sa134', 'sa32', 'sa94', 'sa142', 'sa53' ],
+    [ 'sa83', 'sa122', 'sa135', 'sa143', 'sa63', 'sa54' ],
+    [ 'sa23', 'sa62', 'sa114', 'sa51', 'sa41', 'sa14' ],
+    [ 'sa21', 'sa31', 'sa66', 'sa113', 'sa65', 'sa85' ],
+    [ 'sa43', 'sa112', 'sa34', 'sa133', 'sa61', 'sa71' ],
+    [ 'sa81', 'sa132', 'sa123', 'sa105', 'sa91', 'sa64' ],
+    [],
+    [],
+    [ 'sa24', 'sa92', 'sa111', 'sa25', 'sa82', 'sa42' ],
+    [],
+    [ 'sa93', 'sa131', 'sa141', 'sa33', 'sa103', 'sa13' ],
 ];
 const SEA_AREA =
 {
@@ -97,14 +118,14 @@ const SEA_AREA =
     sa13: { no: 13, lv: 5, title: 'カリブ海C', missions: [ { no: 1, max: 1 }, { no: 2, max: 19 }, { no: 4, max: 150 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa14: { no: 14, lv: 4, title: 'カリブ海D', missions: [ { no: 1, max: 1 }, { no: 4, max: 48 }, { no: 5, max: 48 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa21: { no: 21, lv: 2, title: 'NA海域南西A', missions: [ { no: 1, max: 1 }, { no: 4, max: 16 }, { no: 3, max: 3 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
-    sa22: { no: 22, lv: 1, title: 'NA海域南西B', missions: [ { no: 1, max: 1 }, { no: 4, max: 16 }, { no: 2, max: 7 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
+    sa22: { no: 22, lv: 1, title: 'NA海域南西B', missions: [ { no: 1, max: 1 }, { no: 4, max: 16 }, { no: 2, max: 7 }, { no: 6, max: 1 }, { no: 22, max: 1 } ] },
     sa23: { no: 23, lv: 2, title: 'NA海域南西C', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 5, max: 18 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
-    sa24: { no: 24, lv: 2, title: 'NA海域南西D', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 4, max: 3 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
+    sa24: { no: 24, lv: 2, title: 'NA海域南西D', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 4, max: 3 }, { no: 6, max: 1 }, { no: 8, max: 1 } ] },
     sa25: { no: 25, lv: 3, title: 'NA海域南西E', missions: [ { no: 1, max: 1 }, { no: 2, max: 5 }, { no: 4, max: 60 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa31: { no: 31, lv: 2, title: '南西海嶺A', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 4, max: 36 }, { no: 6, max: 1 }, { no: 7, max: 1 } ] },
-    sa32: { no: 32, lv: 3, title: '南西海嶺B', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 3, max: 6 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
+    sa32: { no: 32, lv: 3, title: '南西海嶺B', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 3, max: 6 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa33: { no: 33, lv: 3, title: '南西海嶺C', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 4, max: 60 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
-    sa34: { no: 34, lv: 3, title: '南西海嶺D', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 2, max: 10 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
+    sa34: { no: 34, lv: 3, title: '南西海嶺D', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 2, max: 10 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa41: { no: 41, lv: 3, title: '西大陸棚A', missions: [ { no: 1, max: 1 }, { no: 3, max: 4 }, { no: 4, max: 60 }, { no: 0, max: 0 }, { no: 8, max: 1 } ] },
     sa42: { no: 42, lv: 4, title: '西大陸棚B', missions: [ { no: 1, max: 1 }, { no: 4, max: 48 }, { no: 3, max: 8 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa43: { no: 43, lv: 2, title: '西大陸棚C', missions: [ { no: 1, max: 1 }, { no: 5, max: 8 }, { no: 3, max: 3 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
@@ -118,7 +139,7 @@ const SEA_AREA =
     sa63: { no: 63, lv: 3, title: 'NA海域南東C', missions: [ { no: 1, max: 1 }, { no: 5, max: 24 }, { no: 2, max: 19 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa64: { no: 64, lv: 4, title: 'NA海域南東D', missions: [ { no: 1, max: 1 }, { no: 3, max: 6 }, { no: 4, max: 96 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa65: { no: 65, lv: 3, title: 'NA海域南東E', missions: [ { no: 1, max: 1 }, { no: 3, max: 4 }, { no: 5, max: 36 }, { no: 0, max: 0 }, { no: 9, max: 1 } ] },
-    sa66: { no: 66, lv: 3, title: 'NA海域南東F', missions: [ { no: 1, max: 1 }, { no: 4, max: 30 }, { no: 2, max: 10 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
+    sa66: { no: 66, lv: 3, title: 'NA海域南東F', missions: [ { no: 1, max: 1 }, { no: 4, max: 30 }, { no: 2, max: 10 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa71: { no: 71, lv: 5, title: '地中海A', missions: [ { no: 1, max: 1 }, { no: 5, max: 40 }, { no: 3, max: 12 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa72: { no: 72, lv: 6, title: '地中海B', missions: [ { no: 1, max: 1 }, { no: 2, max: 19 }, { no: 4, max: 180 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa73: { no: 73, lv: 5, title: '地中海C', missions: [ { no: 1, max: 1 }, { no: 5, max: 40 }, { no: 4, max: 150 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
@@ -138,21 +159,21 @@ const SEA_AREA =
     sa104: { no: 104, lv: 4, title: '北西航路D', missions: [ { no: 1, max: 1 }, { no: 4, max: 48 }, { no: 3, max: 8 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa105: { no: 105, lv: 3, title: '北西航路E', missions: [ { no: 1, max: 1 }, { no: 2, max: 5 }, { no: 5, max: 36 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa106: { no: 106, lv: 6, title: '北西航路F', missions: [ { no: 1, max: 1 }, { no: 5, max: 40 }, { no: 3, max: 15 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
-    sa111: { no: 111, lv: 3, title: 'NA海域東A', missions: [ { no: 1, max: 1 }, { no: 2, max: 5 }, { no: 3, max: 6 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
+    sa111: { no: 111, lv: 3, title: 'NA海域東A', missions: [ { no: 1, max: 1 }, { no: 2, max: 5 }, { no: 3, max: 6 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa112: { no: 112, lv: 2, title: 'NA海域東B', missions: [ { no: 1, max: 1 }, { no: 4, max: 16 }, { no: 2, max: 7 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa113: { no: 113, lv: 3, title: 'NA海域東C', missions: [ { no: 1, max: 1 }, { no: 2, max: 5 }, { no: 4, max: 60 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
-    sa114: { no: 114, lv: 3, title: 'NA海域東D', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 3, max: 6 }, { no: 0, max: 0 }, { no: 8, max: 1 } ] },
+    sa114: { no: 114, lv: 3, title: 'NA海域東D', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 3, max: 6 }, { no: 6, max: 1 }, { no: 8, max: 1 } ] },
     sa121: { no: 121, lv: 6, title: '東大陸棚A', missions: [ { no: 1, max: 1 }, { no: 5, max: 40 }, { no: 4, max: 180 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa122: { no: 122, lv: 2, title: '東大陸棚B', missions: [ { no: 1, max: 1 }, { no: 4, max: 16 }, { no: 5, max: 18 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
-    sa123: { no: 123, lv: 3, title: '東大陸棚C', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 4, max: 60 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
+    sa123: { no: 123, lv: 3, title: '東大陸棚C', missions: [ { no: 1, max: 1 }, { no: 5, max: 18 }, { no: 4, max: 60 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa124: { no: 124, lv: 5, title: '東大陸棚D', missions: [ { no: 1, max: 1 }, { no: 3, max: 10 }, { no: 2, max: 36 }, { no: 0, max: 0 }, { no: 10, max: 25 } ] },
     sa125: { no: 125, lv: 3, title: '東大陸棚E', missions: [ { no: 1, max: 1 }, { no: 5, max: 30 }, { no: 2, max: 29 }, { no: 6, max: 1 }, { no: 9, max: 2 } ] },
     sa131: { no: 131, lv: 2, title: 'NA海域北東A', missions: [ { no: 1, max: 1 }, { no: 4, max: 16 }, { no: 3, max: 3 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa132: { no: 132, lv: 2, title: 'NA海域北東B', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 5, max: 18 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa133: { no: 133, lv: 3, title: 'NA海域北東C', missions: [ { no: 1, max: 1 }, { no: 3, max: 4 }, { no: 4, max: 60 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa134: { no: 134, lv: 2, title: 'NA海域北東D', missions: [ { no: 1, max: 1 }, { no: 2, max: 3 }, { no: 3, max: 3 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
-    sa135: { no: 135, lv: 3, title: 'NA海域北東E', missions: [ { no: 1, max: 1 }, { no: 3, max: 4 }, { no: 2, max: 10 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
-    sa141: { no: 141, lv: 3, title: '北東航路A', missions: [ { no: 1, max: 1 }, { no: 3, max: 4 }, { no: 5, max: 36 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
+    sa135: { no: 135, lv: 3, title: 'NA海域北東E', missions: [ { no: 1, max: 1 }, { no: 3, max: 4 }, { no: 2, max: 10 }, { no: 6, max: 1 }, { no: 10, max: 10 } ] },
+    sa141: { no: 141, lv: 3, title: '北東航路A', missions: [ { no: 1, max: 1 }, { no: 3, max: 4 }, { no: 5, max: 36 }, { no: 6, max: 1 }, { no: 0, max: 0 } ] },
     sa142: { no: 142, lv: 4, title: '北東航路B', missions: [ { no: 1, max: 1 }, { no: 2, max: 10 }, { no: 5, max: 48 }, { no: 6, max: 1 }, { no: 11, max: 4 } ] },
     sa143: { no: 143, lv: 3, title: '北東航路C', missions: [ { no: 1, max: 1 }, { no: 4, max: 30 }, { no: 2, max: 10 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
     sa144: { no: 144, lv: 5, title: '北東航路D', missions: [ { no: 1, max: 1 }, { no: 3, max: 10 }, { no: 5, max: 75 }, { no: 0, max: 0 }, { no: 0, max: 0 } ] },
@@ -373,13 +394,17 @@ const SEA_AREA =
             </div>
             <tweet-button id="tweet" hashtags="アズールレーン,セイレーン作戦" url="https://azulamb.github.io/Siren/"></tweet-button>
             <div id="stars"></div>
+            <div id="recordsinfo" class="hide"></div>
             <div class="status">
                 <five-star light></five-star>
                 <span id="getstar">000</span>
                 /
                 <span id="totalstar">000</span>
             </div>
-            <select id="missions"></select>
+            <div class="filter">
+                <select id="missions"></select>
+                <select id="records"></select>
+            </div>
             <div class="menu">
                 <div class="starconf">
                     <five-star light></five-star>
@@ -1730,6 +1755,7 @@ Promise.all([
         const areaId = info.no;
         const path = document.getElementById(`sa${areaId}`);
         const star = new (customElements.get('five-star'))();
+        star.id = `star${areaId}`;
         if (path) {
             path.dataset.lv = info.lv + '';
             setTimeout(() => { path.classList.add('show'); }, 3500);
@@ -1784,11 +1810,16 @@ Promise.all([
             setTimeout(selected, 4000);
         }
     });
-    document.getElementById('showstar').addEventListener('change', (event) => {
+    const showstar = document.getElementById('showstar');
+    showstar.addEventListener('change', (event) => {
         const checked = event.target.checked;
-        stars.classList[checked ? 'remove' : 'add']('hidestar');
+        stars.classList[checked ? 'remove' : 'add']('hide');
     });
-    ((select, svg) => {
+    const reset = {
+        missions: () => { },
+        records: () => { },
+    };
+    ((select) => {
         ((list) => {
             list.shift();
             const first = list.shift();
@@ -1802,6 +1833,10 @@ Promise.all([
                 select.appendChild(option);
             });
         })([...MISSIONS]);
+        reset.missions = () => {
+            select.options[0].selected = true;
+            delete svg.dataset.mission;
+        };
         select.addEventListener('change', (event) => {
             const value = parseInt(select.options[select.selectedIndex].value);
             if (value <= 1) {
@@ -1809,9 +1844,56 @@ Promise.all([
             }
             else {
                 svg.dataset.mission = value + '';
+                reset.records();
             }
         });
-    })(document.getElementById('missions'), document.getElementById('siren'));
+    })(document.getElementById('missions'));
+    ((list, select, recordsinfo) => {
+        const option = document.createElement('option');
+        option.textContent = '記録';
+        option.value = '0';
+        select.appendChild(option);
+        list.forEach((records, num) => {
+            if (records.length <= 0) {
+                return;
+            }
+            const option = document.createElement('option');
+            option.textContent = CNUM[num];
+            option.value = (num + 1) + '';
+            select.appendChild(option);
+            records.forEach((area, volume) => {
+                area.dataset.record = (num + 1) + '';
+                area.dataset.volume = volume + '';
+                const star = document.getElementById(`star${area.id.replace(/[^0-9]+/g, '')}`);
+                const info = document.createElement('div');
+                info.style.top = star.style.top;
+                info.style.left = star.style.left;
+                info.textContent = `${CNUM[num]}-${RNUM[volume]}`;
+                recordsinfo.appendChild(info);
+            });
+        });
+        reset.records = () => {
+            select.options[0].selected = true;
+            recordsinfo.classList.add('hide');
+            delete svg.dataset.records;
+        };
+        select.addEventListener('change', () => {
+            const value = parseInt(select.options[select.selectedIndex].value);
+            if (value <= 0) {
+                delete svg.dataset.records;
+                showstar.checked = true;
+                recordsinfo.classList.add('hide');
+            }
+            else {
+                svg.dataset.records = value + '';
+                showstar.checked = false;
+                recordsinfo.classList.remove('hide');
+                reset.missions();
+            }
+        });
+    })(RECORDS.map((records) => {
+        return records.map((id) => { return document.getElementById(id); });
+    }), document.getElementById('records'), document.getElementById('recordsinfo'));
 });
     </script>
 </body>

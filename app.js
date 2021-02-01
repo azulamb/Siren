@@ -1287,6 +1287,7 @@ Promise.all([
         const areaId = info.no;
         const path = document.getElementById(`sa${areaId}`);
         const star = new (customElements.get('five-star'))();
+        star.id = `star${areaId}`;
         if (path) {
             path.dataset.lv = info.lv + '';
             setTimeout(() => { path.classList.add('show'); }, 3500);
@@ -1341,11 +1342,16 @@ Promise.all([
             setTimeout(selected, 4000);
         }
     });
-    document.getElementById('showstar').addEventListener('change', (event) => {
+    const showstar = document.getElementById('showstar');
+    showstar.addEventListener('change', (event) => {
         const checked = event.target.checked;
-        stars.classList[checked ? 'remove' : 'add']('hidestar');
+        stars.classList[checked ? 'remove' : 'add']('hide');
     });
-    ((select, svg) => {
+    const reset = {
+        missions: () => { },
+        records: () => { },
+    };
+    ((select) => {
         ((list) => {
             list.shift();
             const first = list.shift();
@@ -1359,6 +1365,10 @@ Promise.all([
                 select.appendChild(option);
             });
         })([...MISSIONS]);
+        reset.missions = () => {
+            select.options[0].selected = true;
+            delete svg.dataset.mission;
+        };
         select.addEventListener('change', (event) => {
             const value = parseInt(select.options[select.selectedIndex].value);
             if (value <= 1) {
@@ -1366,7 +1376,54 @@ Promise.all([
             }
             else {
                 svg.dataset.mission = value + '';
+                reset.records();
             }
         });
-    })(document.getElementById('missions'), document.getElementById('siren'));
+    })(document.getElementById('missions'));
+    ((list, select, recordsinfo) => {
+        const option = document.createElement('option');
+        option.textContent = '記録';
+        option.value = '0';
+        select.appendChild(option);
+        list.forEach((records, num) => {
+            if (records.length <= 0) {
+                return;
+            }
+            const option = document.createElement('option');
+            option.textContent = CNUM[num];
+            option.value = (num + 1) + '';
+            select.appendChild(option);
+            records.forEach((area, volume) => {
+                area.dataset.record = (num + 1) + '';
+                area.dataset.volume = volume + '';
+                const star = document.getElementById(`star${area.id.replace(/[^0-9]+/g, '')}`);
+                const info = document.createElement('div');
+                info.style.top = star.style.top;
+                info.style.left = star.style.left;
+                info.textContent = `${CNUM[num]}-${RNUM[volume]}`;
+                recordsinfo.appendChild(info);
+            });
+        });
+        reset.records = () => {
+            select.options[0].selected = true;
+            recordsinfo.classList.add('hide');
+            delete svg.dataset.records;
+        };
+        select.addEventListener('change', () => {
+            const value = parseInt(select.options[select.selectedIndex].value);
+            if (value <= 0) {
+                delete svg.dataset.records;
+                showstar.checked = true;
+                recordsinfo.classList.add('hide');
+            }
+            else {
+                svg.dataset.records = value + '';
+                showstar.checked = false;
+                recordsinfo.classList.remove('hide');
+                reset.missions();
+            }
+        });
+    })(RECORDS.map((records) => {
+        return records.map((id) => { return document.getElementById(id); });
+    }), document.getElementById('records'), document.getElementById('recordsinfo'));
 });
