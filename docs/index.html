@@ -82,21 +82,22 @@ const MISSIONS =
 [
     '???',
     'エリアを確保する',
-    '異常気象区域を調査する *',
+    '異常気象区域を調査する',
     '強化型艦隊を撃破する',
     '戦闘を勝利する',
-    '資源ポイントを回収する *',
+    '資源ポイントを回収する',
     '記録を回収する',
     'エネルギー供給装置を格納する',
     'スイッチを起動する',
     '強化型艦隊の待ち伏せを撃退',
     'オフニャサルベージを行う',
     '強化型艦隊が落とした資源を回収',
-    '謎の商人と遭遇する *',
-    '情報収集装置を使用する *',
+    '謎の商人と遭遇する',
+    '情報収集装置を使用する',
     '気象操作装置を破壊する',
-    '走査装置を使用する *',
+    '走査装置を使用する',
 ];
+const CONSTANT = [ 2, 5, 12, 13, 15 ];
 const CNUM = [ ... '①②③④⑤⑥⑦⑧⑨⑩⑪⑫' ];
 const RNUM = [ ... 'ⅠⅡⅢⅣⅤⅥⅦ' ];
 const RECORDS =
@@ -864,6 +865,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
                     ':host div > svg { display: block; width: 100%; height: 100%; }',
                     ':host div > svg > path { fill: #222235; stroke: rgba( 65, 70, 93, 0.6 ); }',
                     ':host div.complete > svg > path { fill: #fddf34; stroke: rgba( 125, 79, 0, 0.6 ); }',
+                    ':host( [ constant ] ) > div { border-bottom: 1px solid #25a2c7; }',
                 ].join('');
             this.mission = CreateLineText(this.title);
             this.current = document.createElement('input');
@@ -968,6 +970,15 @@ window.addEventListener('DOMContentLoaded', (event) => {
             this.current.value = strValue;
             this.setAttribute('value', strValue);
             this.onUpdate();
+        }
+        get isConstant() { return this.hasAttribute('constant'); }
+        set isConstant(value) {
+            if (!value) {
+                this.removeAttribute('constant');
+            }
+            else {
+                this.setAttribute('constant', '');
+            }
         }
         get complete() { return 0 < this.max && this.max <= this.value; }
         onUpdate() {
@@ -1804,6 +1815,7 @@ Promise.all([
             mission.title = MISSIONS[info.no] || '???';
             mission.max = info.max;
             mission.value = user.getMission(areaId, index);
+            mission.isConstant = 0 <= CONSTANT.indexOf(info.no);
             areaInfo.addMission(mission);
         });
         const item = CreateHorizontalItem();

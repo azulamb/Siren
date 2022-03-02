@@ -32,6 +32,7 @@ interface MissionItemElement extends HTMLElement
 	title: string;
 	max: number;
 	value: number;
+	isConstant: boolean;
 	readonly complete: boolean;
 	addEventListener( type: 'change', listener: ( event: ChangeMissionEvent ) => any, options?: boolean | AddEventListenerOptions ): void;
 }
