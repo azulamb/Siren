@@ -10,6 +10,7 @@ const user = new UserData();
 declare const CNUM: string[];
 declare const RNUM: string[];
 declare const RECORDS: (string[])[];
+declare const CONSTANT: number[];
 
 Promise.all(
 [
@@ -348,7 +349,7 @@ Promise.all(
 		const areaId = info.no;
 		const path: SVGPathElement = <any>document.getElementById( `sa${ areaId }` );
 
-		const star = new ( customElements.get( 'five-star' ) )();
+		const star = new ( <{ new(): FiveStarElement }>customElements.get( 'five-star' ) )();
 		star.id = `star${ areaId}`;
 
 		if ( path )
@@ -378,8 +379,8 @@ Promise.all(
 			path.classList.add( 'f', ... info.missions.filter( ( item ) => { return 0 < item.no; } ).map( ( item ) => { return `m${ item.no }`; } ) );
 		}
 
-		const createMission = () => { return <MissionItemElement>new ( customElements.get( 'mission-item' ) )(); };
-		const areaInfo = new ( customElements.get( 'area-info' ) )();
+		const createMission = () => { return <MissionItemElement>new ( <{ new(): MissionItemElement }>customElements.get( 'mission-item' ) )(); };
+		const areaInfo = new ( <{ new(): AreaInfoElement }>customElements.get( 'area-info' ) )();
 		areaInfo.no = areaId;
 		areaInfo.title = info.title;
 		info.missions.forEach( ( info, index ) =>
@@ -394,6 +395,7 @@ Promise.all(
 			mission.title = MISSIONS[ info.no ] || '???';
 			mission.max = info.max;
 			mission.value = user.getMission( areaId, index );
+			mission.isConstant = 0 <= CONSTANT.indexOf( info.no );
 
 			areaInfo.addMission( mission );
 		} );

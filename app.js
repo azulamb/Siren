@@ -383,6 +383,7 @@ window.addEventListener('DOMContentLoaded', (event) => {
                     ':host div > svg { display: block; width: 100%; height: 100%; }',
                     ':host div > svg > path { fill: #222235; stroke: rgba( 65, 70, 93, 0.6 ); }',
                     ':host div.complete > svg > path { fill: #fddf34; stroke: rgba( 125, 79, 0, 0.6 ); }',
+                    ':host( [ constant ] ) > div { border-bottom: 1px solid #25a2c7; }',
                 ].join('');
             this.mission = CreateLineText(this.title);
             this.current = document.createElement('input');
@@ -487,6 +488,15 @@ window.addEventListener('DOMContentLoaded', (event) => {
             this.current.value = strValue;
             this.setAttribute('value', strValue);
             this.onUpdate();
+        }
+        get isConstant() { return this.hasAttribute('constant'); }
+        set isConstant(value) {
+            if (!value) {
+                this.removeAttribute('constant');
+            }
+            else {
+                this.setAttribute('constant', '');
+            }
         }
         get complete() { return 0 < this.max && this.max <= this.value; }
         onUpdate() {
@@ -1323,6 +1333,7 @@ Promise.all([
             mission.title = MISSIONS[info.no] || '???';
             mission.max = info.max;
             mission.value = user.getMission(areaId, index);
+            mission.isConstant = 0 <= CONSTANT.indexOf(info.no);
             areaInfo.addMission(mission);
         });
         const item = CreateHorizontalItem();
